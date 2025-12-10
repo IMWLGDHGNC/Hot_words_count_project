@@ -1,0 +1,4 @@
+D:/Daniel/resources/Code/Hot_words_count/build/CMakeFiles/hotwords.dir
+D:/Daniel/resources/Code/Hot_words_count/build/CMakeFiles/info.dir
+D:/Daniel/resources/Code/Hot_words_count/build/CMakeFiles/edit_cache.dir
+D:/Daniel/resources/Code/Hot_words_count/build/CMakeFiles/rebuild_cache.dir
