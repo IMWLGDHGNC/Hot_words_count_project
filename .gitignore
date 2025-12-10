@@ -1,0 +1,6 @@
+#vscode配置
+.vscode/
+
+#cmake生成的文件
+build/
+CMakeFiles/
