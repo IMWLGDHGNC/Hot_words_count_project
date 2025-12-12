@@ -3,20 +3,191 @@ InputFile: D:/Daniel/resources/Code/Hot_words_count/input/input1.txt
 OutputFile: D:/Daniel/resources/Code/Hot_words_count/output/output.txt
 JiebaMode: tagres
 StopWordsCount: 1279
-LineCount: 12870
-===== Time-based Sliding Window TopK Hot Words =====
-StartTime: [00:00:00]
-TimeRange(min): 10
-1:刘备/nrfg/51
-2:诸葛亮/nr/46
-3:诸葛均/nr/42
-4:孔明/nr/35
-5:诸葛/nr/34
-===== Time-based Sliding Window TopK Hot Words =====
-StartTime: [1:00:00]
-TimeRange(min): 10
-1:刘备/nrfg/62
-2:子龙/x/58
-3:赵云/nr/50
-4:哈哈哈/o/37
-5:没/v/36
+LineCount: 12871
+Query Time: 6 minute
+1: 诸葛均/nr/21
+2: 丞相/n/18
+3: 诸葛亮/nr/16
+4: 没/v/14
+5: 一个/m/12
+6: 可爱/v/12
+7: 孔明/nr/12
+8: 诸葛/nr/12
+9: 刘备/nrfg/11
+10: 卧龙/ns/11
+Query Time: 4 minute
+1: 丞相/n/18
+2: 诸葛均/nr/18
+3: 一个/m/12
+4: 可爱/v/12
+5: 没/v/12
+6: 诸葛亮/nr/11
+7: 刘备/nrfg/10
+8: 姥爷/n/10
+9: 孔明/nr/10
+10: 毕/v/10
+Query Time: 7 minute
+1: 刘备/nrfg/30
+2: 童子/nr/25
+3: 诸葛/nr/20
+4: 诸葛亮/nr/18
+5: 哈哈哈/o/14
+6: 崔州平/nr/14
+7: 诸葛均/nr/14
+8: 三爷/n/13
+9: 孔明/nr/13
+10: 卧龙/ns/12
+Query Time: 3 minute
+1: 哈哈哈/o/11
+2: 小童/n/10
+3: 三爷/n/9
+4: 分钟/q/9
+5: 真雪/x/8
+6: 老/a/8
+7: 经略/n/7
+8: 三国/ns/6
+9: 下雪/v/6
+10: 先生/n/6
+Query Time: 2 minute
+1: 可爱/v/12
+2: 丞相/n/9
+3: 爱/v/8
+4: 先登/x/7
+5: 我家/r/7
+6: 飞飞/x/7
+7: 分钟/q/6
+8: 孔明/nr/6
+9: 诸葛均/nr/6
+10: 妮可/nrt/5
+Query Time: 3 minute
+1: 丞相/n/13
+2: 可爱/v/12
+3: 一个/m/8
+4: 爱/v/8
+5: 先登/x/7
+6: 孔明/nr/7
+7: 我家/r/7
+8: 没/v/7
+9: 诸葛均/nr/7
+10: 飞飞/x/7
+Query Time: 5 minute
+1: 诸葛均/nr/21
+2: 丞相/n/18
+3: 诸葛亮/nr/16
+4: 没/v/14
+5: 一个/m/12
+6: 可爱/v/12
+7: 孔明/nr/12
+8: 诸葛/nr/12
+9: 刘备/nrfg/11
+10: 卧龙/ns/11
+Query Time: 10 minute
+1: 刘备/nrfg/39
+2: 诸葛亮/nr/29
+3: 童子/nr/27
+4: 孔明/nr/21
+5: 诸葛/nr/21
+6: 诸葛均/nr/20
+7: 卧龙/ns/19
+8: 哈哈哈/o/19
+9: 三爷/n/17
+10: 先生/n/16
+Query Time: 6 minute
+1: 刘备/nrfg/21
+2: 诸葛/nr/20
+3: 诸葛亮/nr/17
+4: 哈哈哈/o/14
+5: 崔州平/nr/14
+6: 诸葛均/nr/14
+7: 孔明/nr/12
+8: 小童/n/12
+9: 三爷/n/11
+10: 卧龙/ns/11
+Query Time: 10 minute
+1: 刘备/nrfg/39
+2: 诸葛亮/nr/29
+3: 童子/nr/27
+4: 孔明/nr/21
+5: 诸葛/nr/21
+6: 诸葛均/nr/20
+7: 卧龙/ns/19
+8: 哈哈哈/o/19
+9: 三爷/n/17
+10: 先生/n/16
+Query Time: 6 minute
+1: 刘备/nrfg/21
+2: 诸葛/nr/20
+3: 诸葛亮/nr/17
+4: 哈哈哈/o/14
+5: 崔州平/nr/14
+6: 诸葛均/nr/14
+7: 孔明/nr/12
+8: 小童/n/12
+9: 三爷/n/11
+10: 卧龙/ns/11
+Query Time: 2 minute
+1: 哈哈哈/o/11
+2: 小童/n/10
+3: 三爷/n/9
+4: 分钟/q/9
+5: 真雪/x/8
+6: 老/a/8
+7: 经略/n/7
+8: 三国/ns/6
+9: 下雪/v/6
+10: 先生/n/6
+Query Time: 2 minute
+1: 哈哈哈/o/11
+2: 小童/n/10
+3: 三爷/n/9
+4: 分钟/q/9
+5: 真雪/x/8
+6: 老/a/8
+7: 经略/n/7
+8: 三国/ns/6
+9: 下雪/v/6
+10: 先生/n/6
+Query Time: 5 minute
+1: 诸葛/nr/15
+2: 刘备/nrfg/13
+3: 哈哈哈/o/13
+4: 崔州平/nr/13
+5: 大雪/n/10
+6: 小童/n/10
+7: 诸葛亮/nr/10
+8: 三爷/n/9
+9: 分钟/q/9
+10: 老二/nr/9
+Query Time: 3 minute
+1: 丞相/n/13
+2: 可爱/v/12
+3: 一个/m/8
+4: 爱/v/8
+5: 先登/x/7
+6: 孔明/nr/7
+7: 我家/r/7
+8: 没/v/7
+9: 诸葛均/nr/7
+10: 飞飞/x/7
+Query Time: 1 minute
+1: 可爱/v/12
+2: 丞相/n/9
+3: 先登/x/7
+4: 飞飞/x/7
+5: 分钟/q/6
+6: 妮可/nrt/5
+7: 终于/d/5
+8: 120/m/4
+9: 在家/r/4
+10: 大哥/n/4
+Query Time: 4 minute
+1: 丞相/n/18
+2: 诸葛均/nr/18
+3: 一个/m/12
+4: 可爱/v/12
+5: 没/v/12
+6: 诸葛亮/nr/11
+7: 刘备/nrfg/10
+8: 姥爷/n/10
+9: 孔明/nr/10
+10: 毕/v/10

@@ -16,10 +16,11 @@ int deal_with_file_input(cppjieba::Jieba& jieba, const Config& cfg){
     out << "\nInputFile: " << inputpath << "\n";
     out << "OutputFile: " << outputpath << "\n";
     out << "JiebaMode: " << cfg.jiebamode << "\n";
-    std::unordered_multimap<long long, std::string> time_word_map;
+    std::unordered_multimap<ll, std::string> time_word_map;
     std::unordered_map <std::string, std::string> word_tag_map;
     std::unordered_map <std::string, int> word_count_map;
     std::unordered_set <std::string> stop_words_set;
+    std::unordered_multimap <ll, std::string> real_time_word_map;
 
     //scan the stop word file
     std::vector<std::string> stopword_lines;
@@ -46,73 +47,99 @@ int deal_with_file_input(cppjieba::Jieba& jieba, const Config& cfg){
         std::cout << "[INFO] read " << lines.size() << " lines from " << inputpath << std::endl;
         out << "LineCount: " << lines.size() << "\n";
     }
-    
+    ll out_time = 0;
+    auto cmp = [&](const std::pair<std::string, int>& a, const std::pair<std::string, int>& b) {
+        //compare count first, than letter order
+        if(a.second == b.second) return a.first > b.first; // max-heap
+        return a.second < b.second; // min-heap based on count
+    };
     for( size_t idx = 0; idx < lines.size(); ++idx ) {
         const std::string& contents = lines[idx];
-        std::string time_str = extractTime(contents);
-        long long time = calculateTime(time_str);
-        std::string sentence = extractSentence(contents);
-        std::vector<std::pair<std::string, std::string>> tagres;
-        jieba.Tag(sentence, tagres);//tagres: <word, tag>
-        for(auto& v:tagres){
-            if(stop_words_set.find(v.first) != stop_words_set.end()) continue;
-            word_tag_map[v.first] = v.second;
-            time_word_map.insert(std::make_pair(time, v.first));
+        std::string action_str = extractAction(contents);
+        ll currtime;
+        int h, m, s;
+        ll queryTime=-1;
+        if (!checkTime(action_str, h, m, s)){
+            std::string require = extractSentence(contents);
+            queryTime = check_start_time(require);
+                if (queryTime == -1){
+                out<< "[WARNING] Line " << idx+1 << ": cannot extract valid time info from action string: " << action_str << "\n";
+                continue;
+            }
         }
-    }
-    std::cout<<"successfully process "<< lines.size() <<" lines from input file."<<std::endl;
-    while(true){
-        std::cout<<"Choosing the options:\n"<<"1: Searching Topk hot words with time-based sliding window\n"
-        <<"2: quit\n";
-        int option;
-        std::cin>>option;
-        if (option==2) {
-            break;
-        } else if (option==1){
-            out<< "===== Time-based Sliding Window TopK Hot Words =====\n";
-            auto cmp = [&](std::pair<std::string, int>& a, std::pair<std::string, int>& b){
-                return a.second < b.second; //max-heap
-            };
-            std::priority_queue<std::pair<std::string, int>, std::vector<std::pair<std::string, int>>, decltype(cmp)> pq(cmp);
-            std::string start_time_str;
-            if (char c = std::getc(stdin) != '\n')
-                std::ungetc(c, stdin); //clear the buffer
-            std::cout<<"Please input the start time point (HH:MM:SS): ";
-            std::getline(std::cin, start_time_str); //读掉但没放进字符串，太好用了！
-            int h, m, s;
-            sscanf(start_time_str.c_str(), "%*[^0-9]%d:%d:%d", &h, &m, &s);//skip non-digit characters
-            int start_time = h * 3600 + m * 60 + s;
-
-            long long time_range = cfg.time_range;
-            long long time_range_s = time_range*60;
-            long long end_time = start_time + time_range_s;
-            int topk = cfg.topk;
-            word_count_map.clear();
-
-            for(auto& p:time_word_map){
-                if(p.first >= start_time && p.first <= end_time){
-                    if(word_count_map.find(p.second) == word_count_map.end()){
-                        word_count_map[p.second] = 1;
-                    } else {
-                        word_count_map[p.second] += 1;
-                    }
+        //add to real_time_word_map
+        if (queryTime == -1){
+            currtime = h * 3600 + m * 60 + s;
+            ll old_time = currtime - cfg.time_range * 60 >= 0 ? currtime - cfg.time_range * 60 : 0;
+            if (out_time != old_time){
+                //remove outdated records
+                auto it = real_time_word_map.begin();
+                while(it->first < out_time && it != real_time_word_map.end()){
+                    real_time_word_map.erase(it++);
+                    word_count_map[it->second]--;
                 }
             }
-
-            for(auto& wc:word_count_map){
-                pq.push(std::make_pair(wc.first, wc.second));
+            //add current records
+            std::string sentence = extractSentence(contents);
+            std::vector<std::pair<std::string, std::string>> tagres;
+            jieba.Tag(sentence, tagres);
+            for(auto& v:tagres){
+                if(stop_words_set.find(v.first) != stop_words_set.end()) continue;
+                word_tag_map[v.first] = v.second;
+                time_word_map.insert(std::make_pair(currtime, v.first));
+                real_time_word_map.insert(std::make_pair(currtime, v.first));
+                //counter++
+                if (word_count_map.find(v.first) == word_count_map.end()){
+                    word_count_map[v.first] = 1;
+                } else {
+                    word_count_map[v.first] += 1;
+                }
             }
-
-            out << "StartTime: " << start_time_str << "\n";
-            out << "TimeRange(min): " << time_range << "\n";
-            for(int i=0; i<topk && !pq.empty(); ++i){
-                auto p = pq.top();
-                pq.pop();
-                out << i+1 << ":" << p.first << "/" << word_tag_map[p.first] << "/" << p.second << "\n";
+        } else {
+            ll qtime = queryTime*60;
+            out << "Query Time: " << queryTime << " minute" << "\n";
+            if(qtime == currtime){
+                //output hot words for this time
+                std::priority_queue<std::pair<std::string, int>, std::vector<std::pair<std::string, int>>, decltype(cmp)> pq(cmp);
+                for(auto& p:word_count_map){
+                    pq.push(std::make_pair(p.first, p.second));
+                }
+                for(size_t i = 1; i <= cfg.topk; ++i){
+                        if(!pq.empty()){
+                            auto top = pq.top();
+                            pq.pop();
+                            out << i << ": " << top.first << "/" << word_tag_map[top.first] << "/" << top.second << std::endl;
+                        }
+                }
+            }else{
+                //any time query
+                ll stime = qtime - cfg.time_range * 60>=0? qtime - cfg.time_range * 60 : 0;
+                std::unordered_map <std::string, int> w_c_m;
+                std::priority_queue<std::pair<std::string, int>, std::vector<std::pair<std::string, int>>, decltype(cmp)> pq(cmp);
+                auto it = time_word_map.find(stime);
+                while(it!= time_word_map.end() && it->first <= qtime){
+                    if(w_c_m.find(it->second) == w_c_m.end()){
+                        w_c_m[it->second] = 1;
+                    } else {
+                        w_c_m[it->second] += 1;
+                    }
+                    it++;
+                }
+                for(auto& p:w_c_m){
+                    pq.push(std::make_pair(p.first, p.second));
+                }
+                for(size_t i = 1; i <= cfg.topk; ++i){
+                        if(!pq.empty()){
+                            auto top = pq.top();
+                            pq.pop();
+                            out << i << ": " << top.first << "/" << word_tag_map[top.first] << "/" << top.second << std::endl;
+                        }
+                }
             }
+        
         }
+   
     }
-
     return EXIT_SUCCESS;
 }
 
@@ -134,14 +161,15 @@ int main() {
     std::string idfFile  = std::string(JIEBA_DICT_DIR) + "/idf.utf8";
     std::string stopFile = std::string(JIEBA_DICT_DIR) + "/stop_words.utf8";
     
-    std::string userterms = std::string(JIEBA_DICT_DIR) + "/user_word.txt";
+    std::string userterms = std::string(INPUT_ROOT_DIR) + "/user_word.txt";
 
     cppjieba::Jieba jieba(mainDict, hmmModel, userDict, idfFile, stopFile);
     
     std::vector<std::string> userterms_vec;
     ReadUtf8Lines(userterms, userterms_vec);
+
     for(auto &word:userterms_vec){
-        jieba.InsertUserWord(word);
+        jieba.InsertUserWord(word,20000);
     }
     //add user words(proper nouns) to improve the completeness of recognition
 

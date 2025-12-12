@@ -10,8 +10,11 @@
 #include <queue>
 #include <map>
 #include<string>
+#include<deque>
 #include<unordered_map>
 #include<unordered_set>
+
+typedef long long ll;
 
 struct Config {
     std::string inputFile;
@@ -84,7 +87,7 @@ bool LoadIni(const std::string& path, Config& cfg) {
     return true;
 }
 
-std::string extractTime(const std::string& sentence){
+std::string extractAction(const std::string& sentence){
     int start = sentence.find('[');
     int end = sentence.find(']',start);
     if(start == std::string::npos) return "";
@@ -97,8 +100,22 @@ std::string extractSentence(const std::string& sentence){
     else return Trim(sentence.substr(start+1));
 }
 
-long long calculateTime (std::string time_str){
-    int h, m, s;
-    std::sscanf(time_str.c_str(), "%d:%d:%d", &h, &m, &s);
-    return 1LL * h * 3600 + 1LL * m * 60 + s;
+bool checkTime (std::string time_str, int &h, int &m, int &s){
+    if(std::sscanf(time_str.c_str(), "%d:%d:%d", &h, &m, &s))
+        return true;
+    else
+        return false;
+}
+
+long long check_start_time(const std::string& s) {
+    size_t pos = s.find("K=");
+    if (pos == std::string::npos) return -1;
+
+    pos += 2; // skip "K="
+    size_t end = pos;
+    while (end < s.size() && isdigit(s[end])) end++;
+
+    if (end == pos) return -1; // no digits
+
+    return std::stoll(s.substr(pos, end - pos));//stoll: string->long long
 }
