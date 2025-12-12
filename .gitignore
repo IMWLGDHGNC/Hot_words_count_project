@@ -4,3 +4,4 @@
 #cmake生成的文件
 build/
 CMakeFiles/
+.cmake/

@@ -1,0 +1,22 @@
+===== cppjieba segmentation =====
+InputFile: D:/Daniel/resources/Code/Hot_words_count/input/input1.txt
+OutputFile: D:/Daniel/resources/Code/Hot_words_count/output/output.txt
+JiebaMode: tagres
+StopWordsCount: 1279
+LineCount: 12870
+===== Time-based Sliding Window TopK Hot Words =====
+StartTime: [00:00:00]
+TimeRange(min): 10
+1:刘备/nrfg/51
+2:诸葛亮/nr/46
+3:诸葛均/nr/42
+4:孔明/nr/35
+5:诸葛/nr/34
+===== Time-based Sliding Window TopK Hot Words =====
+StartTime: [1:00:00]
+TimeRange(min): 10
+1:刘备/nrfg/62
+2:子龙/x/58
+3:赵云/nr/50
+4:哈哈哈/o/37
+5:没/v/36

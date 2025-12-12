@@ -1,110 +1,153 @@
-#include "Jieba.hpp"
-// Minimal HotWords app with INI config loading and cppjieba usage.
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <string>
-#include <vector>
-#include <cstdlib>
+#include"utils.hpp"
 
+int deal_with_file_input(cppjieba::Jieba& jieba, const Config& cfg){
+    std::vector<std::string> lines;
 
-struct Config {
-    std::string inputFile;
-    std::string outputFile;
-    std::string dictDir;
-    std::string jiebamode;
-    int topk;
-    int time_range;
-};
+    std::string inputpath = std::string(INPUT_ROOT_DIR) + "/" + cfg.inputFile;
+    std::string outputpath = std::string(OUTPUT_ROOT_DIR) + "/" + cfg.outputFile;
 
-bool ReadUtf8Lines(const std::string& filename, std::vector<std::string>& lines) {
-    std::ifstream ifs(filename, std::ios::binary);
-    if (!ifs.is_open()) {
-        return false;
-    }
-    std::string line;
-    while (std::getline(ifs, line)) {
-        // \r is left but \n is removed by getline
-        if (!line.empty() && line.back() == '\r') {
-            line.pop_back();
+    std::ofstream out(outputpath, std::ios::binary);
+    if (!out.is_open()) {
+        std::cerr << "[ERROR] cannot open output file: " << outputpath << std::endl;
+        return EXIT_FAILURE;
+    } 
+
+    out << "===== cppjieba segmentation =====";
+    out << "\nInputFile: " << inputpath << "\n";
+    out << "OutputFile: " << outputpath << "\n";
+    out << "JiebaMode: " << cfg.jiebamode << "\n";
+    std::unordered_multimap<long long, std::string> time_word_map;
+    std::unordered_map <std::string, std::string> word_tag_map;
+    std::unordered_map <std::string, int> word_count_map;
+    std::unordered_set <std::string> stop_words_set;
+
+    //scan the stop word file
+    std::vector<std::string> stopword_lines;
+    std::string stopwordpath = std::string(JIEBA_DICT_DIR) + "/stop_words.utf8";
+    if(!ReadUtf8Lines(stopwordpath, stopword_lines)){
+        std::cerr << "[ERROR] cannot open stop word file: " << stopwordpath << std::endl;
+        return EXIT_FAILURE;
+    } else {
+        for(auto& word:stopword_lines){
+            stop_words_set.insert(word);
         }
-        if (!line.empty()) {
-            lines.push_back(line);
+        out << "StopWordsCount: " << stop_words_set.size() << "\n";
+    }
+
+    //scan the input file line by line
+   
+    if (!ReadUtf8Lines(inputpath, lines)) {
+        std::cerr << "[ERROR] cannot open input file: " << inputpath << std::endl;
+        return EXIT_FAILURE;
+    } else if(lines.size() == 0){
+        std::cout << "[INFO] input file is empty: " << inputpath << std::endl;
+        return EXIT_FAILURE;
+    } else  {
+        std::cout << "[INFO] read " << lines.size() << " lines from " << inputpath << std::endl;
+        out << "LineCount: " << lines.size() << "\n";
+    }
+    
+    for( size_t idx = 0; idx < lines.size(); ++idx ) {
+        const std::string& contents = lines[idx];
+        std::string time_str = extractTime(contents);
+        long long time = calculateTime(time_str);
+        std::string sentence = extractSentence(contents);
+        std::vector<std::pair<std::string, std::string>> tagres;
+        jieba.Tag(sentence, tagres);//tagres: <word, tag>
+        for(auto& v:tagres){
+            if(stop_words_set.find(v.first) != stop_words_set.end()) continue;
+            word_tag_map[v.first] = v.second;
+            time_word_map.insert(std::make_pair(time, v.first));
         }
     }
-    return true;
-}
+    std::cout<<"successfully process "<< lines.size() <<" lines from input file."<<std::endl;
+    while(true){
+        std::cout<<"Choosing the options:\n"<<"1: Searching Topk hot words with time-based sliding window\n"
+        <<"2: quit\n";
+        int option;
+        std::cin>>option;
+        if (option==2) {
+            break;
+        } else if (option==1){
+            out<< "===== Time-based Sliding Window TopK Hot Words =====\n";
+            auto cmp = [&](std::pair<std::string, int>& a, std::pair<std::string, int>& b){
+                return a.second < b.second; //max-heap
+            };
+            std::priority_queue<std::pair<std::string, int>, std::vector<std::pair<std::string, int>>, decltype(cmp)> pq(cmp);
+            std::string start_time_str;
+            if (char c = std::getc(stdin) != '\n')
+                std::ungetc(c, stdin); //clear the buffer
+            std::cout<<"Please input the start time point (HH:MM:SS): ";
+            std::getline(std::cin, start_time_str); //读掉但没放进字符串，太好用了！
+            int h, m, s;
+            sscanf(start_time_str.c_str(), "%*[^0-9]%d:%d:%d", &h, &m, &s);//skip non-digit characters
+            int start_time = h * 3600 + m * 60 + s;
 
-//using "/" to split words
-std::string Join(const std::vector<std::string>& items, const std::string& delim) {
-    std::ostringstream oss;
-    for (size_t i = 0; i < items.size(); ++i) {
-        if (i) oss << delim;
-        oss << items[i];
+            long long time_range = cfg.time_range;
+            long long time_range_s = time_range*60;
+            long long end_time = start_time + time_range_s;
+            int topk = cfg.topk;
+            word_count_map.clear();
+
+            for(auto& p:time_word_map){
+                if(p.first >= start_time && p.first <= end_time){
+                    if(word_count_map.find(p.second) == word_count_map.end()){
+                        word_count_map[p.second] = 1;
+                    } else {
+                        word_count_map[p.second] += 1;
+                    }
+                }
+            }
+
+            for(auto& wc:word_count_map){
+                pq.push(std::make_pair(wc.first, wc.second));
+            }
+
+            out << "StartTime: " << start_time_str << "\n";
+            out << "TimeRange(min): " << time_range << "\n";
+            for(int i=0; i<topk && !pq.empty(); ++i){
+                auto p = pq.top();
+                pq.pop();
+                out << i+1 << ":" << p.first << "/" << word_tag_map[p.first] << "/" << p.second << "\n";
+            }
+        }
     }
-    return oss.str();
+
+    return EXIT_SUCCESS;
 }
 
-//removing the spaces/tabs/newlines at head and tail
-static std::string Trim(const std::string& s) {
-    size_t b = s.find_first_not_of(" \t\r\n");
-    if (b == std::string::npos) return "";
-    size_t e = s.find_last_not_of(" \t\r\n");
-    return s.substr(b, e - b + 1);
-}
 
-static bool ParseBool(const std::string& v) {
-    std::string t;
-    for (char c : v) t.push_back(std::tolower(static_cast<unsigned char>(c)));
-    return (t == "true" || t == "1" || t == "yes");
-}
-
-static bool LoadIni(const std::string& path, Config& cfg) {
-    std::ifstream in(path, std::ios::binary);
-    if (!in.is_open()) return false;
-    std::string line;
-    while (std::getline(in, line)) {
-        if (!line.empty() && line.back() == '\r') line.pop_back();
-        std::string t = Trim(line);
-        if (t.empty() || t[0] == '#') continue;
-        size_t eq = t.find('=');
-        if (eq == std::string::npos) continue;
-        std::string key = Trim(t.substr(0, eq));
-        std::string val = Trim(t.substr(eq + 1));
-        if (key == "input_file") cfg.inputFile = val;
-        else if (key == "output_file") cfg.outputFile = val;
-        else if (key == "dict_dir") cfg.dictDir = val;
-        else if (key == "mode") cfg.jiebamode = val;
-        else if (key == "topk") cfg.topk = std::atoi(val.c_str());//atoi: string->int
-        else if (key == "time_range") cfg.time_range = std::atoi(val.c_str());
-    }
-    return true;
-}
-
-int main(int argc, char* argv[]) {
+int main() {
     Config cfg;
-
     std::string configPath = std::string(PROJECT_ROOT_DIR) + "/config.ini";
     LoadIni(configPath, cfg);
-
-    if (argc >= 2) cfg.inputFile = argv[1];
-    if (argc >= 3) cfg.outputFile = argv[2];
+    int work_type = cfg.work_type;
+    if(work_type == 1){
+        std::cout<<"Choosing File_Input mode"<<std::endl;
+    }else{
+        std::cout<<"Choosing Console_Input mode"<<std::endl;
+    }
 
     std::string mainDict = std::string(JIEBA_DICT_DIR) + "/jieba.dict.utf8";
     std::string hmmModel = std::string(JIEBA_DICT_DIR) + "/hmm_model.utf8";
     std::string userDict = std::string(JIEBA_DICT_DIR) + "/user.dict.utf8";
     std::string idfFile  = std::string(JIEBA_DICT_DIR) + "/idf.utf8";
     std::string stopFile = std::string(JIEBA_DICT_DIR) + "/stop_words.utf8";
+    
+    std::string userterms = std::string(JIEBA_DICT_DIR) + "/user_word.txt";
 
     cppjieba::Jieba jieba(mainDict, hmmModel, userDict, idfFile, stopFile);
-
-    std::vector<std::string> lines;
-    std::string inputpath = std::string(INPUT_ROOT_DIR) + "/" + cfg.inputFile;
-    if (!ReadUtf8Lines(inputpath, lines)) {
-        std::cerr << "[ERROR] cannot open input file: " << inputpath << std::endl;
-        return EXIT_FAILURE;
-    } else {
-        std::cout << "[INFO] read " << lines.size() << " lines from " << inputpath << std::endl;
+    
+    std::vector<std::string> userterms_vec;
+    ReadUtf8Lines(userterms, userterms_vec);
+    for(auto &word:userterms_vec){
+        jieba.InsertUserWord(word);
     }
+    //add user words(proper nouns) to improve the completeness of recognition
+
+    if(work_type==1){
+        deal_with_file_input(jieba, cfg);
+    } 
+    return 0;
     
 }

@@ -21,13 +21,13 @@ add_compile_definitions(
     JIEBA_DICT_DIR="${CMAKE_SOURCE_DIR}/dict"
     PROJECT_ROOT_DIR="${CMAKE_SOURCE_DIR}"
     INPUT_ROOT_DIR="${CMAKE_SOURCE_DIR}/input"
+    OUTPUT_ROOT_DIR="${CMAKE_SOURCE_DIR}/output"
 )
 
 
 # Main app from scripts/main.cpp
 add_executable(hotwords
     ${CMAKE_SOURCE_DIR}/scripts/main.cpp
-    ${CMAKE_SOURCE_DIR}/scripts/tools.cpp
 )
 
 
@@ -41,6 +41,8 @@ endif()
 
 # Install step (optional): place binaries in bin/
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+set(CMAKE_BUILD_TYPE Debug)
 
 # Helpful post-build message
 add_custom_target(info ALL
