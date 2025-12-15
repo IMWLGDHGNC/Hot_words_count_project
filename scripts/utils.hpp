@@ -14,6 +14,10 @@
 #include<unordered_map>
 #include<unordered_set>
 #include "utf8.h"
+#include <stdexcept> // 需要引入异常头文件
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 
 typedef long long ll;
@@ -120,11 +124,15 @@ std::string extractSentence(const std::string& sentence){
     else return Trim(sentence.substr(start+1));
 }
 
-bool checkTime (std::string time_str, int &h, int &m, int &s){
-    if(std::sscanf(time_str.c_str(), "%d:%d:%d", &h, &m, &s))
-        return true;
-    else
-        return false;
+bool checkTime(const std::string& time_str, int &h, int &m, int &s) {
+    if (time_str.empty()) return false;
+    if (std::sscanf(time_str.c_str(), "%d:%d:%d", &h, &m, &s) == 3) {
+        //加上范围检查
+        if (h >= 0 && h <= 23 && m >= 0 && m <= 59 && s >= 0 && s <= 59) {
+            return true;
+        }
+    }
+    return false;
 }
 
 long long check_start_time(const std::string& s) {
