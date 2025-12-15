@@ -13,8 +13,28 @@
 #include<deque>
 #include<unordered_map>
 #include<unordered_set>
+#include "utf8.h"
+
 
 typedef long long ll;
+
+void normalize_radicals(std::string& s) {
+    std::u32string u32;
+
+    // UTF-8 -> UTF-32
+    utf8::utf8to32(s.begin(), s.end(), std::back_inserter(u32));
+
+    for (auto& ch : u32) {
+        if (ch == 0x2F08) ch = 0x4EBA; // ⼈ -> 人
+        if (ch == 0x2F2F) ch = 0x5DE5; // ⼯ -> 工
+    }
+
+    // UTF-32 -> UTF-8
+    std::string result;
+    utf8::utf32to8(u32.begin(), u32.end(), std::back_inserter(result));
+
+    s.swap(result);
+}
 
 struct Config {
     std::string inputFile;

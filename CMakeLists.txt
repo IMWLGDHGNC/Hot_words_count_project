@@ -14,6 +14,7 @@ option(BUILD_DEMO "Build demo.cpp target" OFF)
 include_directories(
     ${CMAKE_SOURCE_DIR}/cppjieba
     ${CMAKE_SOURCE_DIR}/cppjieba/limonp
+    ${CMAKE_SOURCE_DIR}/third_party/utfcpp/source
 )
 
 # Pass dictionary directory as a compile definition so code can find resources
