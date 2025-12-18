@@ -13,6 +13,7 @@
 #include<deque>
 #include<unordered_map>
 #include<unordered_set>
+#include<stdlib.h>
 #include "utf8.h"
 #include <stdexcept> // 需要引入异常头文件
 #ifdef _WIN32
@@ -146,4 +147,40 @@ long long check_start_time(const std::string& s) {
     if (end == pos) return -1; // no digits
 
     return std::stoll(s.substr(pos, end - pos));//stoll: string->long long
+}
+
+void scan_stop_words(std::unordered_set<std::string>& stop_words_set){
+    // scan for stop words
+    std::vector<std::string> stopword_lines;
+    std::string stopwordpath = std::string(JIEBA_DICT_DIR) + "/stop_words.utf8";
+    if (!ReadUtf8Lines(stopwordpath, stopword_lines)) {
+        std::cerr << "[ERROR] cannot open stop word file: " << stopwordpath << std::endl;
+        return ;
+    } else {
+        for (auto& word : stopword_lines) {
+            stop_words_set.insert(word);
+        }
+    }
+}
+
+void scan_sensitive_words(std::unordered_set<std::string>& stop_words_set){
+    // sensitive words eliminate
+    std::string sensitive_words_path = std::string(INPUT_ROOT_DIR) + "/sensitive_words.txt";
+    std::vector<std::string> sensitive_vec;
+    if (ReadUtf8Lines(sensitive_words_path, sensitive_vec)) {
+        for (auto& word : sensitive_vec) {
+            stop_words_set.insert(word);
+        }
+    }
+}
+
+void scan_tag_allowed(std::unordered_set<std::string>& tag_allowed_set){
+    // tag allowed scan
+    std::string tag_allowed_path = std::string(INPUT_ROOT_DIR) + "/tag.txt";
+    std::vector<std::string> tag_allowed_vec;
+    if (ReadUtf8Lines(tag_allowed_path, tag_allowed_vec)) {
+        for (auto& tag : tag_allowed_vec) {
+            tag_allowed_set.insert(tag);
+        }
+    }
 }

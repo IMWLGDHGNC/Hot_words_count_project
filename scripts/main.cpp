@@ -19,32 +19,14 @@ int deal_with_file_input(cppjieba::Jieba& jieba, const Config& cfg) {
 
     std::unordered_map<std::string, std::string> word_tag_map;
     std::unordered_map<std::string, int> word_count_map;
-    std::deque<std::pair<ll, std::string>> window_queue;
-    std::multimap<ll, std::string> history_map;
+    std::multimap<ll, std::string> window_index; // 有序窗口索引，处理迟到/乱序
+    std::multimap<ll, std::string> history_map;  // 有序历史索引，支持任意时刻查询
     
     std::unordered_set<std::string> stop_words_set;
-
-    // scan for stop words
-    std::vector<std::string> stopword_lines;
-    std::string stopwordpath = std::string(JIEBA_DICT_DIR) + "/stop_words.utf8";
-    if (!ReadUtf8Lines(stopwordpath, stopword_lines)) {
-        std::cerr << "[ERROR] cannot open stop word file: " << stopwordpath << std::endl;
-        return EXIT_FAILURE;
-    } else {
-        for (auto& word : stopword_lines) {
-            stop_words_set.insert(word);
-        }
-        out << "StopWordsCount: " << stop_words_set.size() << "\n";
-    }
-    //sensitive words eliminate
-    std::string sensitive_words_path = std::string(INPUT_ROOT_DIR) + "/sensitive_words.txt";
-    std::vector<std::string> sensitive_vec;
-    if (ReadUtf8Lines(sensitive_words_path, sensitive_vec)) {
-        for (auto& word : sensitive_vec) {
-            stop_words_set.insert(word);
-        }
-        out << "SensitiveWordsCount: " << sensitive_vec.size() << "\n";
-    }
+    std::unordered_set<std::string> tag_allowed_set;
+    scan_stop_words(stop_words_set);
+    scan_sensitive_words(stop_words_set);
+    scan_tag_allowed(tag_allowed_set);
 
     // 读取输入文件
     if (!ReadUtf8Lines(inputpath, lines)) {
@@ -85,6 +67,10 @@ int deal_with_file_input(cppjieba::Jieba& jieba, const Config& cfg) {
 
         if (is_data_line) {
             ll new_time = h * 3600 + m * 60 + s;
+            if (new_time > 86400 || new_time < 0) {
+                out << "[WARNING] Line " << idx + 1 << ": time " << h << ":" << m << ":" << s << " is out of range.\n";
+                continue;
+            }
             if (new_time >= currtime) currtime = new_time;
 
             std::string sentence = extractSentence(contents);
@@ -92,29 +78,27 @@ int deal_with_file_input(cppjieba::Jieba& jieba, const Config& cfg) {
             jieba.Tag(sentence, tagres);
 
             for (auto& v : tagres) {
+                if (!tag_allowed_set.empty() && tag_allowed_set.find(v.second) == tag_allowed_set.end()) continue;
                 if (stop_words_set.find(v.first) != stop_words_set.end()) continue;
                 word_tag_map[v.first] = v.second;
                 history_map.insert({new_time, v.first});
-                window_queue.push_back({new_time, v.first});
+                window_index.insert({new_time, v.first});
                 word_count_map[v.first]++;
             }
 
-            //维护滑动窗口 (移除过期数据)
-            // 只有当队列头的时间 < 当前时间 - 时间范围，才移除
+            // 维护滑动窗口 (移除过期数据，按时间有序淘汰，支持迟到/乱序)
             ll threshold_time = (currtime >= cfg.time_range * 60) ? (currtime - cfg.time_range * 60) : 0;
-            
-            while (!window_queue.empty() && window_queue.front().first < threshold_time) {
-                std::string expired_word = window_queue.front().second;
-                
-                auto it = word_count_map.find(expired_word);
-                if (it != word_count_map.end()) {
-                    it->second--;
-                    if (it->second <= 0) {
-                        word_count_map.erase(it);
+            auto it_end = window_index.lower_bound(threshold_time);
+            for (auto it = window_index.begin(); it != it_end; ++it) {
+                auto wc = word_count_map.find(it->second);
+                if (wc != word_count_map.end()) {
+                    wc->second--;
+                    if (wc->second <= 0) {
+                        word_count_map.erase(wc);
                     }
                 }
-                window_queue.pop_front();
             }
+            window_index.erase(window_index.begin(), it_end);
 
         } else {
             // ===== 处理查询行 =====
@@ -123,26 +107,15 @@ int deal_with_file_input(cppjieba::Jieba& jieba, const Config& cfg) {
 
             std::priority_queue<std::pair<std::string, int>, std::vector<std::pair<std::string, int>>, decltype(cmp)> pq(cmp);
             bool is_current_window = (currtime >= qtime_seconds) && (currtime - qtime_seconds < 60);
-            // 查询时间点就是当前流的时间点 -> 直接使用维护好的 word_count_map
             if (is_current_window) {
-                for (auto& p : word_count_map) {
-                    pq.push(p);
-                }
-            } 
-            // 查询过去任意时间段 -> 从 history_map 重新构建
-            else {
+                for (auto& p : word_count_map) pq.push(p);
+            } else {
                 ll start_time = (qtime_seconds >= cfg.time_range * 60) ? (qtime_seconds - cfg.time_range * 60) : 0;
                 std::unordered_map<std::string, int> temp_cnt_map;
                 auto it_start = history_map.lower_bound(start_time);
-                auto it_end = history_map.upper_bound(qtime_seconds);
-
-                for (auto it = it_start; it != it_end; ++it) {
-                    temp_cnt_map[it->second]++;
-                }
-                
-                for (auto& p : temp_cnt_map) {
-                    pq.push(p);
-                }
+                auto it_end2 = history_map.upper_bound(qtime_seconds + 59);
+                for (auto it = it_start; it != it_end2; ++it) temp_cnt_map[it->second]++;
+                for (auto& p : temp_cnt_map) pq.push(p);
             }
 
             for (size_t i = 1; i <= cfg.topk; ++i) {
@@ -176,32 +149,13 @@ int deal_with_console_input(cppjieba::Jieba& jieba, const Config& cfg) {
 
     std::unordered_map<std::string, std::string> word_tag_map;
     std::unordered_map<std::string, int> word_count_map;
-    std::deque<std::pair<ll, std::string>> window_queue;
-    std::multimap<ll, std::string> history_map;
+    std::multimap<ll, std::string> window_index; // 有序窗口索引
+    std::multimap<ll, std::string> history_map;  // 有序历史索引
     std::unordered_set<std::string> stop_words_set;
-
-
-    // Load stop words
-    std::vector<std::string> stopword_lines;
-    std::string stopwordpath = std::string(JIEBA_DICT_DIR) + "/stop_words.utf8";
-    if (!ReadUtf8Lines(stopwordpath, stopword_lines)) {
-        std::cerr << "[ERROR] cannot open stop word file: " << stopwordpath << std::endl;
-        return EXIT_FAILURE;
-    } else {
-        for (auto& word : stopword_lines) {
-            stop_words_set.insert(word);
-        }
-        out << "StopWordsCount: " << stop_words_set.size() << "\n";
-    }
-    // sensitive words eliminate
-    std::string sensitive_words_path = std::string(INPUT_ROOT_DIR) + "/sensitive_words.txt";
-    std::vector<std::string> sensitive_vec;
-    if (ReadUtf8Lines(sensitive_words_path, sensitive_vec)) {
-        for (auto& word : sensitive_vec) {
-            stop_words_set.insert(word);
-        }
-        out << "SensitiveWordsCount: " << sensitive_vec.size() << "\n";
-    }
+    std::unordered_set<std::string> tag_allowed_set;
+    scan_tag_allowed(tag_allowed_set);
+    scan_stop_words(stop_words_set);
+    scan_sensitive_words(stop_words_set);
 
     auto cmp = [&](const std::pair<std::string, int>& a, const std::pair<std::string, int>& b) {
         if (a.second == b.second) return a.first > b.first; 
@@ -279,24 +233,24 @@ int deal_with_console_input(cppjieba::Jieba& jieba, const Config& cfg) {
                 jieba.Tag(sentence_to_process, tagres);
 
                 for (auto& v : tagres) {
+                    if (!tag_allowed_set.empty() && tag_allowed_set.find(v.second) == tag_allowed_set.end()) continue;
                     if (stop_words_set.find(v.first) != stop_words_set.end()) continue;
-                    
                     word_tag_map[v.first] = v.second;
-                    history_map.insert({event_time, v.first}); // 存入历史
-                    window_queue.push_back({event_time, v.first}); // 存入窗口
+                    history_map.insert({event_time, v.first});
+                    window_index.insert({event_time, v.first});
                     word_count_map[v.first]++;
                 }
 
                 ll threshold_time = (currtime >= cfg.time_range * 60) ? (currtime - cfg.time_range * 60) : 0;
-                while (!window_queue.empty() && window_queue.front().first < threshold_time) {
-                    std::string expired_word = window_queue.front().second;
-                    auto it = word_count_map.find(expired_word);
-                    if (it != word_count_map.end()) {
-                        it->second--;
-                        if (it->second <= 0) word_count_map.erase(it);
+                auto it_end = window_index.lower_bound(threshold_time);
+                for (auto it = window_index.begin(); it != it_end; ++it) {
+                    auto wc = word_count_map.find(it->second);
+                    if (wc != word_count_map.end()) {
+                        wc->second--;
+                        if (wc->second <= 0) word_count_map.erase(wc);
                     }
-                    window_queue.pop_front();
                 }
+                window_index.erase(window_index.begin(), it_end);
             } 
             else {
                 // ===== 查询处理逻辑 (Case A) =====
@@ -349,6 +303,9 @@ int main() {
     #ifdef _WIN32
     SetConsoleOutputCP(65001);//setting the output to utf-8
     SetConsoleCP(65001);//setting the input to utf-8
+    // Ensure stdout and stdin are unbuffered for interactive mode
+    setvbuf(stdout, nullptr, _IONBF, 0);
+    setvbuf(stdin, nullptr, _IONBF, 0);
     #endif
 
     Config cfg;
@@ -384,6 +341,7 @@ int main() {
     if(work_type==1){
         deal_with_file_input(jieba, cfg);
     } else{
+        std::cout << "Console input mode (UTF-8). Type 'exit' to quit." << std::endl;
         deal_with_console_input(jieba, cfg);
     }
     return 0;
