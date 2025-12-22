@@ -120,14 +120,31 @@ if (filePicker) {
 let snapshots = [];
 let snapIdx = 0;
 let chart;
+let forceGoLatestOnNextLoad = false; // after console queries, jump to newest snapshot
 
 async function loadSnapshots() {
   const res = await fetch('/api/output_parsed');
   const data = await res.json();
   if (!data.ok) return;
   snapshots = data.snapshots || [];
-  snapIdx = 0;
+  let usedForce = false;
+  if (forceGoLatestOnNextLoad && snapshots.length > 0) {
+    snapIdx = snapshots.length - 1;
+    forceGoLatestOnNextLoad = false;
+    usedForce = true;
+  } else {
+    // Keep current index if possible; clamp within bounds
+    if (snapIdx >= snapshots.length) {
+      snapIdx = Math.max(0, snapshots.length - 1);
+    }
+  }
   renderSnapshot();
+  if (usedForce) {
+    const infoEl = document.getElementById('snapInfo');
+    if (infoEl && infoEl.scrollIntoView) {
+      infoEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
 }
 
 function renderSnapshot() {
@@ -139,7 +156,9 @@ function renderSnapshot() {
     return;
   }
   const snap = snapshots[snapIdx];
-  info.textContent = `查询时间: T = ${snap.time} min`;
+  const total = snapshots.length;
+  const page = snapIdx + 1;
+  info.textContent = `第 ${page}/${total} 张 | 查询时间: T = ${snap.time} min`;
   const labels = snap.items.map(it => it.word);
   const data = snap.items.map(it => it.count);
   if (chart) chart.destroy();
@@ -203,6 +222,7 @@ loadSnapshots();
 // ---------------------- Console interaction (work_type=2) ----------------------
 let consoleTimer;
 let consoleRunning = false;
+let pendingSnapshotRefresh = false; // trigger chart refresh after console outputs are written
 
 async function consoleStart() {
   const res = await fetch('/api/console/start', { method: 'POST' });
@@ -222,6 +242,12 @@ async function consolePoll() {
   const data = await res.json();
   if (!data.ok) return;
   document.getElementById('consoleOut').textContent = (data.lines || []).join('\n');
+  // If a console command was just sent (e.g., QUERY), refresh snapshots after output arrives
+  if (pendingSnapshotRefresh) {
+    pendingSnapshotRefresh = false;
+    // Slight delay to let file flush complete
+    setTimeout(loadSnapshots, 150);
+  }
 }
 
 async function consoleSend() {
@@ -234,7 +260,14 @@ async function consoleSend() {
   });
   const data = await res.json();
   if (data.ok) document.getElementById('consoleInput').value = '';
-  await loadSnapshots();
+  // Only refresh chart for QUERY commands
+  if (/\[ACTION\]\s*QUERY\s*K\s*=\s*\d+/i.test(val)) {
+    // Defer snapshot refresh until backend writes output
+    pendingSnapshotRefresh = true;
+    forceGoLatestOnNextLoad = true;
+    // Fallback refresh in case polling lags
+    setTimeout(loadSnapshots, 500);
+  }
 }
 
 async function consoleStop() {
@@ -265,3 +298,62 @@ consoleInputEl.addEventListener('keydown', (e) => {
     consoleSend();
   }
 });
+
+// Real-time window size adjust in console mode
+async function consoleApplyWindowSize() {
+  const el = document.getElementById('console_time_range');
+  if (!el) return;
+  const val = (el.value || '').trim();
+  const n = parseInt(val, 10);
+  if (!Number.isFinite(n) || n <= 0) {
+    const out = document.getElementById('consoleOut');
+    if (out) out.textContent = '无效的窗口大小，请输入正整数';
+    return;
+  }
+  if (!consoleRunning) {
+    await consoleStart();
+  }
+  // Send WINDOW_SIZE command to backend console
+  await fetch('/api/console/input', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ line: `WINDOW_SIZE = ${n}` })
+  });
+  // Not a query, but still may change future visualization; no immediate refresh required
+}
+
+const consoleApplyBtn = document.getElementById('consoleApplyTime');
+if (consoleApplyBtn) {
+  consoleApplyBtn.addEventListener('click', consoleApplyWindowSize);
+}
+
+// Query time (minute) -> send "[ACTION] QUERY K=t" and show in terminal
+async function consoleQueryTime() {
+  const el = document.getElementById('console_query_min');
+  if (!el) return;
+  const val = (el.value || '').trim();
+  const t = parseInt(val, 10);
+  if (!Number.isFinite(t) || t < 0) {
+    const out = document.getElementById('consoleOut');
+    if (out) out.textContent = '无效的查询时间，请输入非负整数分钟数';
+    return;
+  }
+  if (!consoleRunning) {
+    await consoleStart();
+  }
+  await fetch('/api/console/input', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ line: `[ACTION] QUERY K=${t}` })
+  });
+  // Mark for snapshot refresh upon next poll; also add a fallback timer
+  pendingSnapshotRefresh = true;
+  forceGoLatestOnNextLoad = true;
+  setTimeout(consolePoll, 200);
+  setTimeout(loadSnapshots, 600);
+}
+
+const consoleQueryBtn = document.getElementById('consoleQueryBtn');
+if (consoleQueryBtn) {
+  consoleQueryBtn.addEventListener('click', consoleQueryTime);
+}

@@ -65,6 +65,7 @@ int deal_with_file_input(cppjieba::Jieba& jieba, const Config& cfg) {
     };
 
     ll currtime = 0; // 当前流的时间（秒）
+    int current_time_range = cfg.time_range; // 可动态调整的窗口大小（分钟）
 
     for (size_t idx = 0; idx < lines.size(); ++idx) {
         auto iter_begin = Clock::now();
@@ -78,6 +79,15 @@ int deal_with_file_input(cppjieba::Jieba& jieba, const Config& cfg) {
         
         if (!is_data_line) {
             std::string require = extractSentence(contents);
+            // 支持动态修改窗口大小: WINDOW_SIZE = N
+            long long new_win = check_window_size(require);
+            if (new_win != -1) {
+                if (new_win <= 0) new_win = 1;
+                current_time_range = static_cast<int>(new_win);
+                out << "[INFO] time_range updated to " << current_time_range << " min\n";
+                // 仅修改窗口，不进行查询
+                continue;
+            }
             queryTime = check_start_time(require);
             if (queryTime == -1) {
                 out << "[WARNING] Line " << idx + 1 << ": cannot extract valid time info.\n";
@@ -107,7 +117,7 @@ int deal_with_file_input(cppjieba::Jieba& jieba, const Config& cfg) {
             }
 
             // 维护滑动窗口 (移除过期数据，按时间有序淘汰，支持迟到/乱序)
-            ll threshold_time = (currtime >= cfg.time_range * 60) ? (currtime - cfg.time_range * 60) : 0;
+            ll threshold_time = (currtime >= current_time_range * 60) ? (currtime - current_time_range * 60) : 0;
             auto it_end = window_index.lower_bound(threshold_time);
             for (auto it = window_index.begin(); it != it_end; ++it) {
                 auto wc = word_count_map.find(it->second);
@@ -130,7 +140,7 @@ int deal_with_file_input(cppjieba::Jieba& jieba, const Config& cfg) {
             if (is_current_window) {
                 for (auto& p : word_count_map) pq.push(p);
             } else {
-                ll start_time = (qtime_seconds >= cfg.time_range * 60) ? (qtime_seconds - cfg.time_range * 60) : 0;
+                ll start_time = (qtime_seconds >= current_time_range * 60) ? (qtime_seconds - current_time_range * 60) : 0;
                 std::unordered_map<std::string, int> temp_cnt_map;
                 auto it_start = history_map.lower_bound(start_time);
                 auto it_end2 = history_map.upper_bound(qtime_seconds + 59);
@@ -199,12 +209,14 @@ int deal_with_console_input(cppjieba::Jieba& jieba, const Config& cfg) {
     using Clock = std::chrono::steady_clock;
     long long line_count = 0;
     long long processing_ms = 0;
+    int current_time_range = cfg.time_range;
     std::cout << "==========================================================" << std::endl;
     //std::cout << "[IMPORTANT] If on Windows, run 'chcp 65001' first." << std::endl;
     std::cout << "Input format:" << std::endl;
     std::cout << "  1. [HH:MM:SS] Sentence  -> Set explicit time." << std::endl;
-    std::cout << "  2. Sentence             -> Use current time (" << cfg.time_range << " min window)." << std::endl;
+    std::cout << "  2. Sentence             -> Use current time (" << current_time_range << " min window)." << std::endl;
     std::cout << "  3. [ACTION] QUERY K=15  -> Query hot words at minute 15." << std::endl;
+    std::cout << "  4. [ACTION] WINDOW_SIZE=10 -> Adjust time window to 10 minutes." << std::endl;
     std::cout << "Type 'exit' to quit." << std::endl;
     std::cout << "==========================================================" << std::endl;
 
@@ -233,12 +245,21 @@ int deal_with_console_input(cppjieba::Jieba& jieba, const Config& cfg) {
             int h, m, s;
             bool has_explicit_time = checkTime(action_str, h, m, s);
             
-            // 2. 检查是否为查询指令 (只有当没有时间戳时才可能是查询)
+            // 2. 检查是否为查询/窗口大小指令 (只有当没有时间戳时才可能是这些指令)
             ll queryTime = -1;
             if (!has_explicit_time) {
                 std::string potential_cmd = extractSentence(content); 
                 if (potential_cmd.empty()) potential_cmd = content; // 兼容
                 queryTime = check_start_time(potential_cmd);
+                // 动态调整窗口大小，如: WINDOW_SIZE = 10
+                long long new_win = check_window_size(potential_cmd);
+                if (new_win != -1) {
+                    if (new_win <= 0) new_win = 1;
+                    current_time_range = static_cast<int>(new_win);
+                    std::cout << "[INFO] time_range updated to " << current_time_range << " min" << std::endl;
+                    out << "[INFO] time_range updated to " << current_time_range << " min\n";
+                    continue; // 本行仅用于调整窗口，不进行分词/查询
+                }
             }
 
             // 3. 核心分支逻辑
@@ -270,7 +291,8 @@ int deal_with_console_input(cppjieba::Jieba& jieba, const Config& cfg) {
                 jieba.Tag(sentence_to_process, tagres);
 
                 for (auto& v : tagres) {
-                    if (!tag_allowed_set.empty() && tag_allowed_set.find(v.second) == tag_allowed_set.end()) continue;
+                    if (!tag_allowed_set.empty() && tag_allowed_set.find(v.second) == tag_allowed_set.end()) 
+                        continue;
                     if (stop_words_set.find(v.first) != stop_words_set.end()) continue;
                     word_tag_map[v.first] = v.second;
                     history_map.insert({event_time, v.first});
@@ -278,7 +300,7 @@ int deal_with_console_input(cppjieba::Jieba& jieba, const Config& cfg) {
                     word_count_map[v.first]++;
                 }
 
-                ll threshold_time = (currtime >= cfg.time_range * 60) ? (currtime - cfg.time_range * 60) : 0;
+                ll threshold_time = (currtime >= current_time_range * 60) ? (currtime - current_time_range * 60) : 0;
                 auto it_end = window_index.lower_bound(threshold_time);
                 for (auto it = window_index.begin(); it != it_end; ++it) {
                     auto wc = word_count_map.find(it->second);
@@ -303,7 +325,7 @@ int deal_with_console_input(cppjieba::Jieba& jieba, const Config& cfg) {
                 if (is_current_window) {
                     for (auto& p : word_count_map) pq.push(p);
                 } else {
-                    ll start_time = (qtime_seconds >= cfg.time_range * 60) ? (qtime_seconds - cfg.time_range * 60) : 0;
+                    ll start_time = (qtime_seconds >= current_time_range * 60) ? (qtime_seconds - current_time_range * 60) : 0;
                     std::unordered_map<std::string, int> temp_cnt_map;
                     auto it_start = history_map.lower_bound(start_time);
                     auto it_end = history_map.upper_bound(qtime_seconds + 59);

@@ -184,3 +184,28 @@ void scan_tag_allowed(std::unordered_set<std::string>& tag_allowed_set){
         }
     }
 }
+
+// Parse window size command like: "WINDOW_SIZE = 10"; return minutes or -1 if absent/invalid
+long long check_window_size(const std::string& s) {
+    std::string t = s;
+    // Normalize spaces
+    // Look for keyword
+    size_t pos = t.find("WINDOW_SIZE");
+    if (pos == std::string::npos) return -1;
+    // Move to '=' after keyword
+    size_t eq = t.find('=', pos);
+    if (eq == std::string::npos) return -1;
+    // Skip spaces after '='
+    size_t i = eq + 1;
+    while (i < t.size() && (t[i] == ' ' || t[i] == '\t')) i++;
+    // Parse number
+    size_t j = i;
+    while (j < t.size() && isdigit(static_cast<unsigned char>(t[j]))) j++;
+    if (j == i) return -1;
+    try {
+        long long v = std::stoll(t.substr(i, j - i));
+        return v;
+    } catch (...) {
+        return -1;
+    }
+}

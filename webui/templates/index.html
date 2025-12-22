@@ -18,7 +18,7 @@
     <div class="hero-inner">
       <div class="brand">HotWords</div>
       <div class="subtitle">实时热词统计与查询</div>
-      <p class="intro">这是2025年数据结构与算法课程大作业——一个基于滑动窗口的中文热词统计与分析项目的可视化展示，支持中文分词与 Top-K 查询，提供 Web 界面配置与结果可视化（柱状图）。</p>
+      <p class="intro">这是2025年数据结构与算法课程大作业，一个基于滑动窗口的中文热词统计与分析项目的可视化展示，并支持中文分词与 Top-K 查询，提供 Web 界面配置与结果可视化（柱状图）。</p>
       <div class="cta-row">
         <button id="downloadBtn" class="btn">下载结果</button>
       </div>
@@ -92,6 +92,20 @@
           <label>终端控制</label>
           <div class="input-row">
             <button id="consoleToggle" class="btn danger">启动终端</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>窗口时长 (分钟) — 实时调整</label>
+          <div class="input-row">
+            <input id="console_time_range" type="number" min="1" value="{{ cfg.get('time_range','10') }}" />
+            <button id="consoleApplyTime" class="btn">更新窗口（实时）</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>查询时间（分钟）</label>
+          <div class="input-row">
+            <input id="console_query_min" type="number" min="0" value="{{ cfg.get('time_range','10') }}" />
+            <button id="consoleQueryBtn" class="btn">查询（终端显示）</button>
           </div>
         </div>
         <div class="field spaced flex-fill">

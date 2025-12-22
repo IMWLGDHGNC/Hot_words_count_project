@@ -1,21 +1,75 @@
 ===== cppjieba segmentation =====Choosing console_input_mode
 OutputFile: D:/Daniel/resources/Code/Hot_words_count/output/output.txt
 JiebaMode: tagres
+Query Time: 20 minute
 Query Time: 35 minute
-1: ⽅/x/1
-2: ⽣/x/1
-3: 人工智能/x/1
-4: 式/k/1
-5: 改变/v/1
-Query Time: 10 minute
-1: Code/eng/1
-2: D/x/1
-3: Daniel/eng/1
-4: Hot/eng/1
-5: build/eng/1
-===================================
-Total lines processed: 6
-Program Metrics
-Throughput(lines/sec): 2000
-AvgLatency(ms/line): 0.5
-Memory(MB): 135.512
+1: ⽅/x/2
+2: ⽣/x/2
+3: 人工智能/x/2
+4: 式/k/2
+5: 改变/v/2
+Query Time: 35 minute
+1: ⽅/x/2
+2: ⽣/x/2
+3: 人工智能/x/2
+4: 式/k/2
+5: 改变/v/2
+Query Time: 35 minute
+1: ⽅/x/2
+2: ⽣/x/2
+3: 人工智能/x/2
+4: 式/k/2
+5: 改变/v/2
+[INFO] time_range updated to 10 min
+Query Time: 35 minute
+1: ⽅/x/2
+2: ⽣/x/2
+3: 人工智能/x/2
+4: 式/k/2
+5: 改变/v/2
+Query Time: 35 minute
+1: ⽅/x/3
+2: ⽣/x/3
+3: 人工智能/x/3
+4: 式/k/3
+5: 改变/v/3
+[INFO] time_range updated to 5 min
+Query Time: 35 minute
+1: ⽅/x/3
+2: ⽣/x/3
+3: 人工智能/x/3
+4: 式/k/3
+5: 改变/v/3
+[INFO] time_range updated to 10 min
+[INFO] time_range updated to 10 min
+Query Time: 35 minute
+1: ⽅/x/3
+2: ⽣/x/3
+3: 人工智能/x/3
+4: 式/k/3
+5: 改变/v/3
+Query Time: 35 minute
+1: ⽅/x/4
+2: ⽣/x/4
+3: 人工智能/x/4
+4: 式/k/4
+5: 改变/v/4
+Query Time: 35 minute
+1: ⽅/x/5
+2: ⽣/x/5
+3: 人工智能/x/5
+4: 式/k/5
+5: 改变/v/5
+Query Time: 35 minute
+1: ⽅/x/5
+2: ⽣/x/5
+3: 人工智能/x/5
+4: 式/k/5
+5: 改变/v/5
+[INFO] time_range updated to 35 min
+Query Time: 35 minute
+1: ⽅/x/5
+2: ⽣/x/5
+3: 人工智能/x/5
+4: 式/k/5
+5: 改变/v/5
