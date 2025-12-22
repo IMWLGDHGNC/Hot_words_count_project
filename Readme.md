@@ -95,52 +95,63 @@ cmake --build . #windows
 ## 运行与使用
 #### 前期设置
 - **输入部分**
-    - sensitive_words.txt: 输入需要屏蔽的敏感词
-    - tag.txt
+    - sensitive_words.txt: 输入需要屏蔽的敏感词。
+    - tag.txt: 输入筛选的词性，参考[jieba词性表]。(https://blog.csdn.net/Yellow_python/article/details/83991967)，如:'n'表示只选出名词；如果文档为空，则默认为不筛选词性。
+    - user_word.txt: 用户输入的专业名词，如“中山大学计算机学院”。
+    - 所有的输入文件都放在该目录下。
+- **输出部分**
+    - output.txt: 系统输出文档。
+- **配置文件**: [config.ini](config.ini)
+    1.input_file: 文件输入下的输入文件，务必确保该文件在...\input下。
+    2.output_file: 系统处理的输出文件名，务必确保该文件在...\output下。
+    3.dict_dir: jieba库自带的字典名。
+    4.mode: jieba分词模式，必须开启tagres模式以实现词性筛选。
+    5.topk: 热词统计范围。
+    6.time_range: 时间窗口大小。
+    7.work_type: 1:文件输入模式 2：终端输入模式
+    8.normalize: 是否对非标准utf-8输入的中文进行标准化
 
-- 配置文件: [config.ini](config.ini)
-    1. input_file: 文件输入下的输入文件，务必
-    2. output_file: 系统处理的输出文件名
-
-- 文件模式（离线批处理）
+- **文件模式**（离线批处理）
 	1. 设置 [config.ini](config.ini) 中的 `input_file` 与 `output_file`。
 	2. 运行二进制：
-		 ```powershell
-		 .\build\bin\hotwords.exe
+		 .\build\hotwords.exe
 		 ```
 	3. 在 [output/output.txt](output/output.txt) 末尾查看性能指标与查询结果快照。
 
-- 交互模式（实时输入）
+- **交互模式（实时输入）**
 	1. 将 `work_type = 2`。
-	2. 运行二进制后，按提示输入：
+	2. 运行二进制后，按提示格式输入：
 		 - `[HH:MM:SS] 句子内容`：显式时间事件。
 		 - `句子内容`：隐式使用当前时间。
 		 - `[ACTION] QUERY K=15`：查询第 15 分钟 Top-K（`topk` 由配置决定）。
 		 - `[ACTION] WINDOW_SIZE=10`：将滑动窗口调整为 10 分钟。
 	3. 输入 `exit` 退出；输出写至 [output/output.txt](output/output.txt)。
 
-- Web 可视化（Flask）
+- **Web 可视化（Flask）**
 	1. 安装依赖：
-		 ```powershell
+		 ```
 		 python -m pip install -r webui/requirements.txt
 		 ```
 	2. 启动服务：
-		 ```powershell
+		 ```
 		 python webui/app.py
 		 ```
-	3. 功能：
+         打开您的浏览器并访问：
+         (http://127.0.0.1:8080/)[http://127.0.0.1:8080/]
+
+	<!-- 3. 功能：
 		 - 查看/更新配置（除 `dict_dir`、`mode` 由后端控制）。
 		 - 执行批处理运行并预览输出。
 		 - 上传输入文件（保存至 [input/](input)，自动更新 `input_file`）。
 		 - 交互式控制台：启动/输入/查看输出（强制 `work_type=2`）。
-		 - 解析输出中的查询快照列表 `/api/output_parsed`。
+		 - 解析输出中的查询快照列表 `/api/output_parsed`。 -->
 
 ---
 
-**输入指令说明（交互模式）**
-- 时间事件: `[HH:MM:SS] 句子内容`
+## 输入指令说明（交互模式）
+- 时间事件: `[HH:MM:SS] sentence`
 	- 示例: `[12:34:56] 人工智能正在改变世界`
-- 即时事件（无时间戳）: `句子内容`
+- 即时事件（无时间戳）: `sentence`
 	- 示例: `机器学习与深度学习`
 - 查询 Top-K: `[ACTION] QUERY K=15`
 	- 解释: 查询第 15 分钟窗口的热点词；若为当前分钟，直接基于 `word_count_map`，否则从 `history_map` 重构区间统计。
@@ -149,11 +160,10 @@ cmake --build . #windows
 
 ---
 
-**设计与复杂度小结**
+## 设计与复杂度小结
 - 分词与词性标注: 由 cppjieba 完成（复杂度与句长相关，近似线性）。
 - 数据维护: 插入与淘汰基于 `multimap` 的有序时间索引，支持迟到与历史查询。
 - Top-K 查询: 当前实现为“全量推堆+弹出 K”，复杂度 $O(n\log n + K\log n)$；可按需改为 $O(n\log K)$ 的最小堆优化。
-
 ---
 
 ## References

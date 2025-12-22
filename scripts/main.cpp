@@ -85,6 +85,19 @@ int deal_with_file_input(cppjieba::Jieba& jieba, const Config& cfg) {
                 if (new_win <= 0) new_win = 1;
                 current_time_range = static_cast<int>(new_win);
                 out << "[INFO] time_range updated to " << current_time_range << " min\n";
+                // 变更窗口后，基于 history_map 立即重建当前窗口的计数与索引，确保随后的查询生效
+                {
+                    word_count_map.clear();
+                    window_index.clear();
+                    ll start_time = (currtime >= current_time_range * 60) ? (currtime - current_time_range * 60) : 0;
+                    auto it_start = history_map.lower_bound(start_time);
+                    auto it_end_rebuild = history_map.upper_bound(currtime);
+                    for (auto it = it_start; it != it_end_rebuild; ++it) {
+                        const std::string &w = it->second;
+                        word_count_map[w]++;
+                        window_index.insert({it->first, w});
+                    }
+                }
                 // 仅修改窗口，不进行查询
                 continue;
             }
@@ -258,6 +271,19 @@ int deal_with_console_input(cppjieba::Jieba& jieba, const Config& cfg) {
                     current_time_range = static_cast<int>(new_win);
                     std::cout << "[INFO] time_range updated to " << current_time_range << " min" << std::endl;
                     out << "[INFO] time_range updated to " << current_time_range << " min\n";
+                    // 变更窗口后，基于 history_map 立即重建当前窗口的计数与索引
+                    {
+                        word_count_map.clear();
+                        window_index.clear();
+                        ll start_time = (currtime >= current_time_range * 60) ? (currtime - current_time_range * 60) : 0;
+                        auto it_start = history_map.lower_bound(start_time);
+                        auto it_end_rebuild = history_map.upper_bound(currtime);
+                        for (auto it = it_start; it != it_end_rebuild; ++it) {
+                            const std::string &w = it->second;
+                            word_count_map[w]++;
+                            window_index.insert({it->first, w});
+                        }
+                    }
                     continue; // 本行仅用于调整窗口，不进行分词/查询
                 }
             }
@@ -315,7 +341,7 @@ int deal_with_console_input(cppjieba::Jieba& jieba, const Config& cfg) {
                 // ===== 查询处理逻辑 (Case A) =====
                 ll qtime_seconds = queryTime * 60;
                 out << "Query Time: " << queryTime << " minute" << "\n";
-                std::cout << "Querying Top " << cfg.topk << " words at minute " << queryTime << "..." << std::endl;
+                std::cout << "Querying Top " << cfg.topk << " words at minute " << queryTime << ", window size = " << current_time_range << " minutes" << std::endl;
 
                 std::priority_queue<std::pair<std::string, int>, std::vector<std::pair<std::string, int>>, decltype(cmp)> pq(cmp);
 

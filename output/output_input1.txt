@@ -1,0 +1,118 @@
+===== cppjieba segmentation =====
+InputFile: D:/Daniel/resources/Code/Hot_words_count/input/input1.txt
+OutputFile: D:/Daniel/resources/Code/Hot_words_count/output/output_input1.txt
+JiebaMode: tagres
+LineCount: 12872
+Query Time: 6 minute
+1: 诸葛/nr/8
+2: 诸葛亮/nr/7
+3: 后来/t/4
+4: 家/q/4
+5: 窗户/n/4
+Query Time: 4 minute
+1: 诸葛/nr/21
+2: 诸葛亮/nr/20
+3: 刘备/nrfg/16
+4: 没/v/14
+5: 一个/m/13
+Query Time: 7 minute
+1: 童子/nr/23
+2: 刘备/nrfg/21
+3: 诸葛亮/nr/15
+4: 一个/m/10
+5: 孔明/nr/10
+Query Time: 3 minute
+1: 哈哈哈/o/16
+2: 刘备/nrfg/14
+3: 一个/m/13
+4: 先生/n/13
+5: 小童/n/13
+Query Time: 2 minute
+1: 哈哈哈/o/17
+2: 三爷/n/15
+3: 丞相/n/15
+4: 可爱/v/15
+5: 分钟/q/14
+Query Time: 3 minute
+1: 哈哈哈/o/16
+2: 刘备/nrfg/14
+3: 一个/m/13
+4: 先生/n/13
+5: 小童/n/13
+Query Time: 5 minute
+1: 诸葛/nr/24
+2: 诸葛亮/nr/24
+3: 刘备/nrfg/22
+4: 孔明/nr/14
+5: 崔州平/nr/14
+Query Time: 10 minute
+1: 哈哈哈/o/14
+2: 卧龙/ns/13
+3: 刘备/nrfg/12
+4: 诸葛亮/nr/12
+5: 孔明/nr/10
+Query Time: 6 minute
+1: 刘备/nrfg/27
+2: 童子/nr/20
+3: 诸葛亮/nr/20
+4: 诸葛/nr/18
+5: 崔州平/nr/14
+Query Time: 10 minute
+1: 哈哈哈/o/14
+2: 卧龙/ns/13
+3: 刘备/nrfg/12
+4: 诸葛亮/nr/12
+5: 孔明/nr/10
+Query Time: 6 minute
+1: 刘备/nrfg/27
+2: 童子/nr/20
+3: 诸葛亮/nr/20
+4: 诸葛/nr/18
+5: 崔州平/nr/14
+Query Time: 2 minute
+1: 哈哈哈/o/17
+2: 三爷/n/15
+3: 丞相/n/15
+4: 可爱/v/15
+5: 分钟/q/14
+Query Time: 2 minute
+1: 哈哈哈/o/17
+2: 三爷/n/15
+3: 丞相/n/15
+4: 可爱/v/15
+5: 分钟/q/14
+Query Time: 5 minute
+1: 诸葛/nr/24
+2: 诸葛亮/nr/24
+3: 刘备/nrfg/22
+4: 孔明/nr/14
+5: 崔州平/nr/14
+Query Time: 3 minute
+1: 哈哈哈/o/16
+2: 刘备/nrfg/14
+3: 一个/m/13
+4: 先生/n/13
+5: 小童/n/13
+Query Time: 1 minute
+1: 可爱/v/15
+2: 分钟/q/14
+3: 哈哈哈/o/14
+4: 三爷/n/12
+5: 丞相/n/11
+Query Time: 4 minute
+1: 诸葛/nr/21
+2: 诸葛亮/nr/20
+3: 刘备/nrfg/16
+4: 没/v/14
+5: 一个/m/13
+Query Time: 80 minute
+1: 诸葛亮/nr/14
+2: 刘表/nr/13
+3: 二爷/n/11
+4: 刘备/nrfg/10
+5: 说/v/10
+===================================
+Program Metrics
+Throughput(lines/sec): 41792.2
+AvgLatency(ms/line): 0
+Memory(MB): 142.559

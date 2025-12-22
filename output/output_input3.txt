@@ -1,0 +1,101 @@
+===== cppjieba segmentation =====
+InputFile: D:/Daniel/resources/Code/Hot_words_count/input/input3.txt
+OutputFile: D:/Daniel/resources/Code/Hot_words_count/output/output_input3.txt
+JiebaMode: tagres
+LineCount: 14930
+Query Time: 3 minute
+Query Time: 3 minute
+1: 江陵/ns/24
+2: 糜芳/x/14
+3: 关羽/nr/13
+4: 周瑜/nr/12
+5: 二爷/n/11
+Query Time: 2 minute
+1: 百姓/n/37
+2: 说/v/28
+3: 江陵/ns/27
+4: 关羽/nr/25
+5: 刘备/nrfg/22
+Query Time: 5 minute
+1: 曹操/nr/25
+2: 蔡瑁/x/25
+3: 曹/nr/21
+4: 嫌弃/v/19
+5: 蔡夫人/nr/19
+Query Time: 5 minute
+1: 曹操/nr/25
+2: 蔡瑁/x/25
+3: 曹/nr/21
+4: 嫌弃/v/19
+5: 蔡夫人/nr/19
+Query Time: 10 minute
+1: 刘琮/x/21
+2: 曹操/nr/19
+3: 青州/ns/19
+4: 蔡夫人/nr/14
+5: 投降/v/12
+Query Time: 4 minute
+1: 曹操/nr/24
+2: 百姓/n/24
+3: 关羽/nr/21
+4: 蔡夫人/nr/19
+5: 说/v/19
+Query Time: 5 minute
+1: 曹操/nr/25
+2: 蔡瑁/x/25
+3: 曹/nr/21
+4: 嫌弃/v/19
+5: 蔡夫人/nr/19
+Query Time: 4 minute
+1: 曹操/nr/24
+2: 百姓/n/24
+3: 关羽/nr/21
+4: 蔡夫人/nr/19
+5: 说/v/19
+Query Time: 3 minute
+1: 关羽/nr/33
+2: 江陵/ns/28
+3: 百姓/n/27
+4: 说/v/21
+5: 刘备/nrfg/18
+Query Time: 4 minute
+1: 曹操/nr/24
+2: 百姓/n/24
+3: 关羽/nr/21
+4: 蔡夫人/nr/19
+5: 说/v/19
+Query Time: 5 minute
+1: 曹操/nr/25
+2: 蔡瑁/x/25
+3: 曹/nr/21
+4: 嫌弃/v/19
+5: 蔡夫人/nr/19
+Query Time: 3 minute
+1: 关羽/nr/33
+2: 江陵/ns/28
+3: 百姓/n/27
+4: 说/v/21
+5: 刘备/nrfg/18
+Query Time: 6 minute
+1: 曹操/nr/33
+2: 蔡瑁/x/26
+3: 曹/nr/24
+4: 老板/n/21
+5: 荀攸/x/19
+Query Time: 4 minute
+1: 曹操/nr/24
+2: 百姓/n/24
+3: 关羽/nr/21
+4: 蔡夫人/nr/19
+5: 说/v/19
+Query Time: 3 minute
+1: 关羽/nr/33
+2: 江陵/ns/28
+3: 百姓/n/27
+4: 说/v/21
+5: 刘备/nrfg/18
+===================================
+Program Metrics
+Throughput(lines/sec): 37415.5
+AvgLatency(ms/line): 0
+Memory(MB): 144.375

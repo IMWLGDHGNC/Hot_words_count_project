@@ -113,14 +113,15 @@ bool LoadIni(const std::string& path, Config& cfg) {
 }
 
 std::string extractAction(const std::string& sentence){
-    int start = sentence.find('[');
-    int end = sentence.find(']',start);
-    if(start == std::string::npos) return "";
-    else return sentence.substr(start+1,end-1);
+    size_t start = sentence.find('[');
+    if (start == std::string::npos) return "";
+    size_t end = sentence.find(']', start);
+    if (end == std::string::npos || end <= start + 1) return "";
+    return sentence.substr(start + 1, end - start - 1);
 }
 
 std::string extractSentence(const std::string& sentence){
-    int start = sentence.find(']');
+    size_t start = sentence.find(']');
     if(start == std::string::npos) return sentence;
     else return Trim(sentence.substr(start+1));
 }

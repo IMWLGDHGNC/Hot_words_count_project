@@ -1,0 +1,88 @@
+===== cppjieba segmentation =====
+InputFile: D:/Daniel/resources/Code/Hot_words_count/input/input2.txt
+OutputFile: D:/Daniel/resources/Code/Hot_words_count/output/output_input2.txt
+JiebaMode: tagres
+LineCount: 11698
+Query Time: 2 minute
+1: 分钟/q/49
+2: 120/m/21
+3: 40/m/17
+4: 经略/n/16
+5: 小时/n/15
+Query Time: 5 minute
+1: 水镜/n/30
+2: 刘备/nrfg/29
+3: 小孩/n/21
+4: 庞统/x/21
+5: 小童/n/20
+Query Time: 6 minute
+1: 刘备/nrfg/36
+2: 听/v/22
+3: 小孩/n/18
+4: 水镜/n/18
+5: 小童/n/16
+Query Time: 3 minute
+1: 刘备/nrfg/41
+2: 牧童/n/28
+3: 张飞/nr/26
+4: 水镜/n/23
+5: 大怒/x/20
+Query Time: 3 minute
+1: 刘备/nrfg/41
+2: 牧童/n/28
+3: 张飞/nr/26
+4: 水镜/n/23
+5: 大怒/x/20
+Query Time: 1 minute
+1: 分钟/q/51
+2: 张飞/nr/38
+3: 赵云/nr/31
+4: 大怒/x/24
+5: 怒/vg/24
+Query Time: 7 minute
+1: 刘备/nrfg/36
+2: 诸葛亮/nr/15
+3: 刘家/nrfg/14
+4: 老/a/14
+5: 赵云/nr/14
+Query Time: 4 minute
+1: 刘备/nrfg/35
+2: 小孩/n/32
+3: 水镜/n/30
+4: 小童/n/27
+5: 听/v/19
+Query Time: 4 minute
+1: 刘备/nrfg/35
+2: 小孩/n/32
+3: 水镜/n/30
+4: 小童/n/27
+5: 听/v/19
+Query Time: 4 minute
+1: 刘备/nrfg/35
+2: 小孩/n/32
+3: 水镜/n/30
+4: 小童/n/27
+5: 听/v/19
+Query Time: 4 minute
+1: 刘备/nrfg/35
+2: 小孩/n/32
+3: 水镜/n/30
+4: 小童/n/27
+5: 听/v/19
+Query Time: 5 minute
+1: 水镜/n/30
+2: 刘备/nrfg/29
+3: 小孩/n/21
+4: 庞统/x/21
+5: 小童/n/20
+Query Time: 3 minute
+1: 刘备/nrfg/41
+2: 牧童/n/28
+3: 张飞/nr/26
+4: 水镜/n/23
+5: 大怒/x/20
+===================================
+Program Metrics
+Throughput(lines/sec): 39495.8
+AvgLatency(ms/line): 8.54847e-05
+Memory(MB): 142.211
