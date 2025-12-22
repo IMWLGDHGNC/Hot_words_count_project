@@ -1,0 +1,21 @@
+===== cppjieba segmentation =====Choosing console_input_mode
+OutputFile: D:/Daniel/resources/Code/Hot_words_count/output/output.txt
+JiebaMode: tagres
+Query Time: 35 minute
+1: ⽅/x/1
+2: ⽣/x/1
+3: 人工智能/x/1
+4: 式/k/1
+5: 改变/v/1
+Query Time: 10 minute
+1: Code/eng/1
+2: D/x/1
+3: Daniel/eng/1
+4: Hot/eng/1
+5: build/eng/1
+===================================
+Total lines processed: 6
+Program Metrics
+Throughput(lines/sec): 2000
+AvgLatency(ms/line): 0.5
+Memory(MB): 135.512

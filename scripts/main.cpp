@@ -1,6 +1,25 @@
 #include"utils.hpp"
+#include <chrono>
+#ifdef _WIN32
+#include <windows.h>
+#include <psapi.h>
+#endif
+
+static double get_memory_mb(){
+#ifdef _WIN32
+    PROCESS_MEMORY_COUNTERS pmc;
+    if(GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))){
+        return static_cast<double>(pmc.WorkingSetSize) / (1024.0 * 1024.0);
+    }
+#endif
+    return 0.0;
+}
 
 int deal_with_file_input(cppjieba::Jieba& jieba, const Config& cfg) {
+    using Clock = std::chrono::steady_clock;
+    auto t_begin = Clock::now();
+    long long processed_lines = 0;
+    long long processing_ms = 0;
     std::vector<std::string> lines;
 
     std::string inputpath = std::string(INPUT_ROOT_DIR) + "/" + cfg.inputFile;
@@ -48,6 +67,7 @@ int deal_with_file_input(cppjieba::Jieba& jieba, const Config& cfg) {
     ll currtime = 0; // 当前流的时间（秒）
 
     for (size_t idx = 0; idx < lines.size(); ++idx) {
+        auto iter_begin = Clock::now();
         std::string contents = lines[idx];
         normalize_radicals(contents);
         std::string action_str = extractAction(contents);
@@ -128,8 +148,22 @@ int deal_with_file_input(cppjieba::Jieba& jieba, const Config& cfg) {
                 }
             }
         }
+
+        processed_lines++;
+        processing_ms += std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - iter_begin).count();
     }
     
+    double elapsed_sec = std::chrono::duration_cast<std::chrono::duration<double>>(Clock::now() - t_begin).count();
+    double avg_latency_ms = processed_lines > 0 ? (static_cast<double>(processing_ms) / processed_lines) : 0.0;
+    double throughput_lps = elapsed_sec > 0 ? (static_cast<double>(processed_lines) / elapsed_sec) : 0.0;
+    double mem_mb = get_memory_mb();
+
+    out << "===================================\n";
+    out << "Program Metrics" << "\n";
+    out << "Throughput(lines/sec): " << throughput_lps << "\n";
+    out << "AvgLatency(ms/line): " << avg_latency_ms << "\n";
+    out << "Memory(MB): " << mem_mb << "\n";
+
     out.close();
     return EXIT_SUCCESS;
 }
@@ -162,9 +196,11 @@ int deal_with_console_input(cppjieba::Jieba& jieba, const Config& cfg) {
         return a.second < b.second; 
     };
 
-    int line_count = 0;
+    using Clock = std::chrono::steady_clock;
+    long long line_count = 0;
+    long long processing_ms = 0;
     std::cout << "==========================================================" << std::endl;
-    std::cout << "[IMPORTANT] If on Windows, run 'chcp 65001' first." << std::endl;
+    //std::cout << "[IMPORTANT] If on Windows, run 'chcp 65001' first." << std::endl;
     std::cout << "Input format:" << std::endl;
     std::cout << "  1. [HH:MM:SS] Sentence  -> Set explicit time." << std::endl;
     std::cout << "  2. Sentence             -> Use current time (" << cfg.time_range << " min window)." << std::endl;
@@ -228,6 +264,7 @@ int deal_with_console_input(cppjieba::Jieba& jieba, const Config& cfg) {
             }
 
             // 4. 执行逻辑
+            auto iter_begin = Clock::now();
             if (is_data_processing) {
                 std::vector<std::pair<std::string, std::string>> tagres;
                 jieba.Tag(sentence_to_process, tagres);
@@ -251,7 +288,7 @@ int deal_with_console_input(cppjieba::Jieba& jieba, const Config& cfg) {
                     }
                 }
                 window_index.erase(window_index.begin(), it_end);
-            } 
+            }
             else {
                 // ===== 查询处理逻辑 (Case A) =====
                 ll qtime_seconds = queryTime * 60;
@@ -287,13 +324,25 @@ int deal_with_console_input(cppjieba::Jieba& jieba, const Config& cfg) {
                     std::cout << k << ": " << top.first << "/" << word_tag_map[top.first] << "/" << top.second << std::endl;
                 }
             }
+            processing_ms += std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - iter_begin).count();
 
         } catch (const std::exception& e) {
             std::cerr << "[ERROR] " << e.what() << std::endl;
         }
     }
     
+    double total_proc_sec = static_cast<double>(processing_ms) / 1000.0;
+    double avg_latency_ms = line_count > 0 ? (static_cast<double>(processing_ms) / line_count) : 0.0;
+    double throughput_lps = total_proc_sec > 0 ? (static_cast<double>(line_count) / total_proc_sec) : 0.0;
+    double mem_mb = get_memory_mb();
+    
+    std::cout<< "保存到文件: " << outputpath << std::endl;
+    out << "===================================\n";
     out << "Total lines processed: " << line_count << "\n";
+    out << "Program Metrics" << "\n";
+    out << "Throughput(lines/sec): " << throughput_lps << "\n";
+    out << "AvgLatency(ms/line): " << avg_latency_ms << "\n";
+    out << "Memory(MB): " << mem_mb << "\n";
     out.close();
     return EXIT_SUCCESS;
 }

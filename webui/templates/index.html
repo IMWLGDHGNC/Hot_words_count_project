@@ -6,6 +6,7 @@
   <title>HotWords</title>
   <link rel="stylesheet" href="/static/styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;600&display=swap" rel="stylesheet">
@@ -17,7 +18,7 @@
     <div class="hero-inner">
       <div class="brand">HotWords</div>
       <div class="subtitle">实时热词统计与查询</div>
-      <p class="intro">这是一个基于滑动窗口的中文热词统计与分析项目，支持中文分词与 Top-K 查询，提供 Web 界面配置与结果可视化（柱状图）。用于课堂作业、舆情监测与趋势分析演示。</p>
+      <p class="intro">这是2025年数据结构与算法课程大作业——一个基于滑动窗口的中文热词统计与分析项目的可视化展示，支持中文分词与 Top-K 查询，提供 Web 界面配置与结果可视化（柱状图）。</p>
       <div class="cta-row">
         <button id="downloadBtn" class="btn">下载结果</button>
       </div>
@@ -43,19 +44,19 @@
           <div class="field">
             <label>输入文件</label>
             <div class="input-row">
-              <input id="input_file" value="{{ cfg.get('input_file','test_sentences.txt') }}" placeholder="当前使用的文件名" />
+              <div id="input_file_display" class="pill" title="当前使用的文件名">{{ cfg.get('input_file','test_sentences.txt') }}</div>
+              <input id="input_file" type="hidden" value="{{ cfg.get('input_file','test_sentences.txt') }}" />
               <label class="btn file">
-                选择文件
+                选择
                 <input type="file" id="inputFilePicker" accept=".txt,.log,.csv,.json" hidden />
               </label>
-              <button id="uploadBtn" class="btn">上传</button>
             </div>
             <div id="uploadLog" class="log"></div>
           </div>
           <div class="field">
             <label>输出文件</label>
             <div class="input-row">
-              <input id="output_file" value="{{ cfg.get('output_file','output.txt') }}" />
+              <input id="output_file" value="{{ cfg.get('output_file','output.txt') }}" readonly />
             </div>
           </div>
           <div class="field">
@@ -68,7 +69,7 @@
           </div>
           
           <div class="field">
-            <label>Normalize NFC</label>
+            <label>文本标准化</label>
             <select id="normalize">
               <option value="true" {% if cfg.get('normalize','true')=='true' %}selected{% endif %}>true</option>
               <option value="false" {% if cfg.get('normalize','true')=='false' %}selected{% endif %}>false</option>
@@ -79,27 +80,29 @@
           <button id="runConfigBtn" class="btn primary">运行分析</button>
         </div>
       </section>
-    </div>
 
-    <section class="card large">
-      <h2>终端输入模式</h2>
-      <div class="grid two">
+      <section class="card small">
+        <h2>终端输出</h2>
+        <pre id="consoleOut" class="code terminal-out"></pre>
+      </section>
+
+      <section class="card small console-card">
+        <h2>控制台输入模式</h2>
         <div class="field">
-          <label>控制</label>
+          <label>终端控制</label>
           <div class="input-row">
             <button id="consoleToggle" class="btn danger">启动终端</button>
           </div>
         </div>
-        <div class="field">
-          <label>批量输入（多行）</label>
-          <div class="input-row" style="align-items:flex-start">
-            <textarea id="consoleInput" class="terminal-textarea" rows="6" style="width:100%"></textarea>
+        <div class="field spaced flex-fill">
+          <label>批量输入</label>
+          <div class="input-row stretch">
+            <textarea id="consoleInput" class="terminal-textarea fill" rows="10" style="width:100%"></textarea>
             <button id="consoleSend" class="btn">发送</button>
           </div>
         </div>
-      </div>
-      <pre id="consoleOut" class="code" style="margin-top:10px;min-height:220px"></pre>
-    </section>
+      </section>
+    </div>
 
   </main>
 

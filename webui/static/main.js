@@ -56,6 +56,23 @@ if (runConfigBtn) {
   });
 }
 
+// Auto-save and re-run when time_range changes, so visualization reflects the new window immediately
+const timeRangeEl = document.getElementById('time_range');
+if (timeRangeEl) {
+  timeRangeEl.addEventListener('change', async () => {
+    const body = {
+      input_file: document.getElementById('input_file').value,
+      output_file: document.getElementById('output_file').value,
+      topk: document.getElementById('topk').value,
+      time_range: document.getElementById('time_range').value,
+      work_type: '1',
+      normalize: document.getElementById('normalize').value,
+    };
+    await fetch('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    await runHotwords();
+  });
+}
+
 document.getElementById('downloadBtn').addEventListener('click', () => {
   window.location.href = '/download/output';
 });
@@ -78,17 +95,23 @@ async function uploadInputFile() {
     log.textContent = '上传失败';
   }
   if (data.ok && data.config && data.config.input_file) {
-    document.getElementById('input_file').value = data.config.input_file;
+    const val = data.config.input_file;
+    document.getElementById('input_file').value = val;
+    const disp = document.getElementById('input_file_display');
+    if (disp) disp.textContent = val;
   }
 }
 
-document.getElementById('uploadBtn').addEventListener('click', uploadInputFile);
-// Update input_file immediately when choosing a file
+// Auto upload when choosing a file, and update displayed name
 const filePicker = document.getElementById('inputFilePicker');
 if (filePicker) {
-  filePicker.addEventListener('change', () => {
+  filePicker.addEventListener('change', async () => {
     if (filePicker.files && filePicker.files[0]) {
-      document.getElementById('input_file').value = filePicker.files[0].name;
+      const name = filePicker.files[0].name;
+      document.getElementById('input_file').value = name;
+      const disp = document.getElementById('input_file_display');
+      if (disp) disp.textContent = name;
+      await uploadInputFile();
     }
   });
 }
@@ -116,10 +139,15 @@ function renderSnapshot() {
     return;
   }
   const snap = snapshots[snapIdx];
-  info.textContent = `时间: ${snap.time} | 排名数: ${snap.items.length}`;
+  info.textContent = `查询时间: T = ${snap.time} min`;
   const labels = snap.items.map(it => it.word);
   const data = snap.items.map(it => it.count);
   if (chart) chart.destroy();
+  if (window.Chart && window.ChartDataLabels) {
+    Chart.register(window.ChartDataLabels);
+  }
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const labelColor = prefersDark ? '#1f2937' : '#111111'; // 深色标注，按主题选择更深的颜色
   chart = new Chart(canvas, {
     type: 'bar',
     data: {
@@ -127,20 +155,34 @@ function renderSnapshot() {
       datasets: [{
         label: '词频',
         data,
-        backgroundColor: '#0a84ff'
+        backgroundColor: '#0a84ff',
+        borderRadius: 6,
+        borderSkipped: 'bottom'
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      layout: { padding: { left: 40, right: 40 } },
+      plugins: { 
+        legend: { display: false },
+        datalabels: {
+          anchor: 'end',
+          align: 'top',
+          color: labelColor,
+          formatter: (value) => value,
+          font: { weight: '600' }
+        }
+      },
       scales: {
         x: { ticks: { color: '#6b7280' } },
-        y: { ticks: { color: '#6b7280' }, beginAtZero: true }
+        y: { ticks: { color: '#6b7280' }, beginAtZero: true, grace: '10%' }
       }
     }
   });
 }
+
+// (trends UI removed)
 
 const prevEl = document.getElementById('prevArrow') || document.querySelector('.nav-arrow.left');
 const nextEl = document.getElementById('nextArrow') || document.querySelector('.nav-arrow.right');

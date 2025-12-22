@@ -272,4 +272,22 @@ def download_output():
 if __name__ == "__main__":
     # FLASK run
     port = int(os.environ.get("PORT", 8080))
-    app.run(host="127.0.0.1", port=port, debug=True)
+    app.run(host="127.0.0.1", port=port, debug=False, use_reloader=False)
+
+@app.post("/api/exit")
+def api_exit():
+    # Try Werkzeug dev server shutdown first
+    func = request.environ.get('werkzeug.server.shutdown')
+    # stop any running console process
+    global console_proc
+    try:
+        if console_proc and console_proc.poll() is None:
+            console_proc.terminate()
+    except Exception:
+        pass
+    if func is not None:
+        func()
+        return jsonify({"ok": True, "msg": "Server shutting down"})
+    # Fallback: hard exit (may interrupt requests)
+    threading.Thread(target=lambda: os._exit(0), daemon=True).start()
+    return jsonify({"ok": True, "msg": "Exiting"})
