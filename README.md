@@ -99,7 +99,7 @@ cmake --build . #如果你用windows系统
 #### 前期设置
 - **输入部分**
     - sensitive_words.txt: 输入需要屏蔽的敏感词。
-    - tag.txt: 输入筛选的词性，参考[jieba词性表]。(https://blog.csdn.net/Yellow_python/article/details/83991967)，如:'n'表示只选出名词；如果文档为空，则默认为不筛选词性。
+    - tag.txt: 输入筛选的词性，参考[jieba词性表](https://blog.csdn.net/Yellow_python/article/details/83991967)，如:'n'表示只选出名词；如果文档为空，则默认为不筛选词性。
     - user_word.txt: 用户输入的专业名词，如“中山大学计算机学院”。
     - 所有的输入文件都放在该目录下。
 - **输出部分**
@@ -116,9 +116,10 @@ cmake --build . #如果你用windows系统
 
 - **文件模式**（离线批处理）
 	1. 设置 [config.ini](config.ini) 中的 `input_file` 与 `output_file`。
-	2. 运行二进制：
+	2. 运行：
+		```
 		 .\build\hotwords.exe
-		 ```
+		```
 	3. 在 [output/output.txt](output/output.txt) 末尾查看性能指标与查询结果快照。
 
 - **交互模式（实时输入）**
@@ -140,7 +141,7 @@ cmake --build . #如果你用windows系统
 		 python webui/app.py
 		 ```
          打开您的浏览器并访问：
-         (http://127.0.0.1:8080/)[http://127.0.0.1:8080/]
+        http://127.0.0.1:8080/
 
 	<!-- 3. 功能：
 		 - 查看/更新配置（除 `dict_dir`、`mode` 由后端控制）。
