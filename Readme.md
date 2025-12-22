@@ -2,6 +2,7 @@
 
 本项目是一个基于 C++ 与 cppjieba 的中文热词统计系统，支持文件/交互式两种输入模式，并提供 Flask Web 可视化界面。系统面向“实时流式文本”的热词分析场景，支持时间窗口管理、Top-K 维护、敏感/停用词过滤、词性筛选等功能。
 
+![image](image.png)
 ---
 
 ## 功能概述
@@ -169,5 +170,3 @@ cmake --build . #windows
 ## References
 - [cppjieba/](cppjieba) 与其词典资源 [dict/](dict)
 - [utfcpp](third_party/utfcpp) 提供 UTF 编解码支持
-
-如需进一步功能（如持久化、并发输入、REST API 热词查询等），欢迎在此基础上扩展。

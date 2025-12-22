@@ -96,6 +96,6 @@ Query Time: 3 minute
 5: 刘备/nrfg/18
 ===================================
 Program Metrics
-Throughput(lines/sec): 37415.5
-AvgLatency(ms/line): 0
-Memory(MB): 144.375
+Throughput(lines/sec): 30699.9
+AvgLatency(ms/line): 6.69792e-05
+Memory(MB): 144.359
