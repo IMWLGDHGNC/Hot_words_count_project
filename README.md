@@ -88,8 +88,10 @@ cmake ..
 ```
 3. 编译项目
 ```
-make -j$(nproc) #Linux/macOS
-cmake --build . #windows
+make -j$(nproc) #如果你用Linux/macOS系统
+```
+```
+cmake --build . #如果你用windows系统
 ```
 ---
 
