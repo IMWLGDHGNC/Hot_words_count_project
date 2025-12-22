@@ -77,7 +77,7 @@
 
 1. 克隆项目
 ```
-git clone https://github.com/IMWLGDHGNC/Hot_words_count_project.git
+git clone --recurse-submodules https://github.com/IMWLGDHGNC/Hot_words_count_project.git
 cd Hot_words_count_project
 ```
 2. 创建目录并运行cmake配置
