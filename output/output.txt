@@ -1,62 +1,15 @@
 ===== cppjieba segmentation =====Choosing console_input_mode
 OutputFile: D:/Daniel/resources/Code/Hot_words_count/output/output.txt
-JiebaMode: tagres#禁止修改
+JiebaMode: tagres
+[INFO] time_range updated to 5 min
 Query Time: 35 minute
 1: ⽅/x/1
 2: ⽣/x/1
 3: 人工智能/x/1
-4: 式/k/1
-5: 改变/v/1
-Query Time: 40 minute
-Query Time: 40 minute
-Query Time: 40 minute
-Query Time: 40 minute
-Query Time: 35 minute
-1: ⽅/x/4
-2: ⽣/x/4
-3: 人工智能/x/4
-4: 式/k/4
-5: 改变/v/4
-Query Time: 35 minute
-1: ⽅/x/5
-2: ⽣/x/5
-3: 人工智能/x/5
-4: 式/k/5
-5: 改变/v/5
-Query Time: 36 minute
-1: ⽅/x/5
-2: ⽣/x/5
-3: 人工智能/x/5
-4: 式/k/5
-5: 改变/v/5
-Query Time: 40 minute
-Query Time: 39 minute
+Query Time: 19 minute
+1: 人工智能/x/1
 [INFO] time_range updated to 10 min
-Query Time: 39 minute
-1: ⽅/x/5
-2: ⽣/x/5
-3: 人工智能/x/5
-4: 式/k/5
-5: 改变/v/5
-Query Time: 40 minute
-1: ⽅/x/5
-2: ⽣/x/5
-3: 人工智能/x/5
-4: 式/k/5
-5: 改变/v/5
-Query Time: 40 minute
-1: ⽅/x/6
-2: ⽣/x/6
-3: 人工智能/x/6
-4: 式/k/6
-5: 改变/v/6
-[INFO] time_range updated to 2 min
-Query Time: 40 minute
-Query Time: 40 minute
-[INFO] time_range updated to 10 min
-Query Time: 40 minute
-1: ⽅/x/7
-2: ⽣/x/7
-3: 人工智能/x/7
-4: 式/k/7
-5: 改变/v/7
+Query Time: 35 minute
+1: ⽅/x/1
+2: ⽣/x/1
+3: 人工智能/x/1

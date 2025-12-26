@@ -34,6 +34,6 @@ Query Time: 3 minute
 5: 喜欢/v/1
 ===================================
 Program Metrics
-Throughput(lines/sec): 9866.42
+Throughput(lines/sec): 8706.72
 AvgLatency(ms/line): 0
-Memory(MB): 135.465
+Memory(MB): 135.559

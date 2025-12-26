@@ -31,9 +31,9 @@ Query Time: 3 minute
 5: 词/n/1
 ===================================
 Program Metrics
-Throughput(lines/sec): 5622.35
+Throughput(lines/sec): 9802.44
 AvgLatency(ms/line): 0
-Memory(MB): 135.531
+Memory(MB): 135.625
 
 ===== UnitTest Summary =====
 [PASS] 词性筛选生效：基线含动词，筛选后剔除喜欢/学习
