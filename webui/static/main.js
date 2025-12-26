@@ -121,17 +121,25 @@ let snapshots = [];
 let snapIdx = 0;
 let chart;
 let forceGoLatestOnNextLoad = false; // after console queries, jump to newest snapshot
+let previousSnapshotCount = 0; // track snapshot count to detect new queries
 
 async function loadSnapshots() {
   const res = await fetch('/api/output_parsed');
   const data = await res.json();
   if (!data.ok) return;
+  const oldCount = snapshots.length;
   snapshots = data.snapshots || [];
   let usedForce = false;
+  let hasNewValidSnapshot = false;
+  
   if (forceGoLatestOnNextLoad && snapshots.length > 0) {
     snapIdx = snapshots.length - 1;
     forceGoLatestOnNextLoad = false;
     usedForce = true;
+    // 检查是否有新增快照且该快照有有效结果
+    if (snapshots.length > oldCount && snapshots[snapIdx]?.items?.length > 0) {
+      hasNewValidSnapshot = true;
+    }
   } else {
     // Keep current index if possible; clamp within bounds
     if (snapIdx >= snapshots.length) {
@@ -139,12 +147,14 @@ async function loadSnapshots() {
     }
   }
   renderSnapshot();
-  if (usedForce) {
+  // 只在有新的有效查询结果时才跳转到图表位置
+  if (usedForce && hasNewValidSnapshot) {
     const infoEl = document.getElementById('snapInfo');
     if (infoEl && infoEl.scrollIntoView) {
       infoEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }
+  previousSnapshotCount = snapshots.length;
 }
 
 function renderSnapshot() {
@@ -251,21 +261,76 @@ async function consolePoll() {
 }
 
 async function consoleSend() {
-  const val = document.getElementById('consoleInput').value;
+  const inputEl = document.getElementById('consoleInput');
+  const sendBtn = document.getElementById('consoleSend');
+  const outEl = document.getElementById('consoleOut');
+  const val = inputEl.value;
   if (!val) return;
-  const res = await fetch('/api/console/input', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text: val })
-  });
-  const data = await res.json();
-  if (data.ok) document.getElementById('consoleInput').value = '';
-  // Only refresh chart for QUERY commands
-  if (/\[ACTION\]\s*QUERY\s*K\s*=\s*\d+/i.test(val)) {
-    // Defer snapshot refresh until backend writes output
+
+  // Auto-start console if needed
+  if (!consoleRunning) {
+    await consoleStart();
+  }
+
+  // Decide whether to stream in chunks
+  const norm = val.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const lines = norm.split('\n');
+  const bigByLines = lines.length > 500; // 降低阈值：超过500行就分片
+  const bigByBytes = new Blob([val]).size > 100 * 1024; // 降至100KB
+  const isQuery = /\[ACTION\]\s*QUERY\s*K\s*=\s*\d+/i.test(val);
+
+  if (bigByLines || bigByBytes) {
+    // Chunked streaming: send in batches to avoid huge payload freeze
+    const chunkSize = 500; // 减小每批大小，更平滑
+    const total = lines.length;
+
+    // Lock UI
+    sendBtn.disabled = true;
+    inputEl.disabled = true;
+    let sent = 0;
+    try {
+      for (let i = 0; i < total; i += chunkSize) {
+        const chunk = lines.slice(i, i + chunkSize);
+        const res = await fetch('/api/console/input', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lines: chunk })
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || '发送失败');
+        sent = Math.min(total, i + chunk.length);
+        if (outEl) {
+          outEl.textContent = `正在发送 ${sent}/${total} 行... (${Math.round(sent/total*100)}%)`;
+          outEl.scrollTop = outEl.scrollHeight; // 自动滚动到底部
+        }
+        // 更短间隔让 UI 更新更平滑
+        await new Promise(r => setTimeout(r, 5));
+      }
+      // Clear input after success
+      inputEl.value = '';
+      if (outEl) outEl.textContent = `✓ 发送完成：共 ${total} 行`;
+    } catch (err) {
+      if (outEl) outEl.textContent = `✗ 发送出错：${err.message || err}`;
+    } finally {
+      sendBtn.disabled = false;
+      inputEl.disabled = false;
+    }
+  } else {
+    // Small payload: single request
+    const res = await fetch('/api/console/input', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: val })
+    });
+    const data = await res.json();
+    if (!data.ok && outEl) outEl.textContent = `发送失败：${data.error || ''}`;
+    if (data.ok) inputEl.value = '';
+  }
+
+  // Refresh chart only if it was a QUERY command
+  if (isQuery) {
     pendingSnapshotRefresh = true;
     forceGoLatestOnNextLoad = true;
-    // Fallback refresh in case polling lags
     setTimeout(loadSnapshots, 500);
   }
 }
@@ -356,4 +421,42 @@ async function consoleQueryTime() {
 const consoleQueryBtn = document.getElementById('consoleQueryBtn');
 if (consoleQueryBtn) {
   consoleQueryBtn.addEventListener('click', consoleQueryTime);
+}
+
+// Clear and reset console
+async function consoleClearAndReset() {
+  const inputEl = document.getElementById('consoleInput');
+  const outEl = document.getElementById('consoleOut');
+  
+  // Clear input textarea
+  if (inputEl) inputEl.value = '';
+  
+  // Clear output display
+  if (outEl) outEl.textContent = '准备重置...';
+  
+  // Clear snapshots and reset chart
+  snapshots = [];
+  snapIdx = 0;
+  renderSnapshot();
+  
+  // If console is running, send RESET command to backend
+  if (consoleRunning) {
+    try {
+      await fetch('/api/console/input', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ line: 'RESET' })
+      });
+      if (outEl) outEl.textContent = '✓ 已重置：时间和计数已清零，柱状图已清空';
+    } catch (err) {
+      if (outEl) outEl.textContent = '✗ 重置失败：' + (err.message || err);
+    }
+  } else {
+    if (outEl) outEl.textContent = '✓ 输入已清空，柱状图已清空';
+  }
+}
+
+const consoleClearBtn = document.getElementById('consoleClear');
+if (consoleClearBtn) {
+  consoleClearBtn.addEventListener('click', consoleClearAndReset);
 }

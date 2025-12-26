@@ -1,0 +1,74 @@
+===== cppjieba segmentation =====
+InputFile: D:/Daniel/resources/Code/Hot_words_count/input/unit_test_input.txt
+OutputFile: D:/Daniel/resources/Code/Hot_words_count/output/output_unit_test.txt
+JiebaMode: tagres
+LineCount: 15
+Query Time: 1 minute
+1: 人工智能/x/4
+2: 世界/n/1
+3: 词/n/1
+Query Time: 2 minute
+1: 人工智能/x/5
+2: 世界/n/1
+3: 学生/n/1
+4: 词/n/1
+[INFO] time_range updated to 1 min
+Query Time: 5 minute
+1: 大学/n/4
+2: 人工智能/x/1
+[INFO] time_range updated to 10 min
+Query Time: 5 minute
+1: 人工智能/x/6
+2: 大学/n/4
+3: 世界/n/1
+4: 学生/n/1
+5: 词/n/1
+Query Time: 3 minute
+1: 人工智能/x/5
+2: 中山大学计算机学院/x/2
+3: 世界/n/1
+4: 学生/n/1
+5: 词/n/1
+===================================
+Program Metrics
+Throughput(lines/sec): 5622.35
+AvgLatency(ms/line): 0
+Memory(MB): 135.531
+
+===== UnitTest Summary =====
+[PASS] 词性筛选生效：基线含动词，筛选后剔除喜欢/学习
+[PASS] TopK@1 不应为空
+[PASS] TopK@1 词性筛选后应只包含名词或专有名词 (x)
+[PASS] 敏感词应被过滤 (黄/赌/毒)
+[PASS] 1 分钟窗口下，查询@5 仅含近期词 (大学) 不含早期词 (学生)
+[PASS] 10 分钟窗口下，查询@5 应补回早期词 (学生)
+[PASS] 用户词可查询：基线 Query@3 包含 中山大学计算机学院
+[PASS] 用户词可查询：筛选 (含 x) Query@3 包含 中山大学计算机学院
+ALL TESTS PASSED
+
+===== 基线 (无词性筛选) 查询@2 =====
+1: 人工智能/x/5
+2: 世界/n/1
+3: 发展/vn/1
+4: 喜欢/v/1
+5: 学习/v/1
+
+===== 词性筛选 (n/nz) 查询@2 =====
+1: 人工智能/x/5
+2: 世界/n/1
+3: 学生/n/1
+4: 词/n/1
+
+===== 基线 (无词性筛选) 查询@3 =====
+1: 人工智能/x/5
+2: 中山大学计算机学院/x/2
+3: 世界/n/1
+4: 发展/vn/1
+5: 喜欢/v/1
+
+===== 词性筛选 (n/nz/x) 查询@3 =====
+1: 人工智能/x/5
+2: 中山大学计算机学院/x/2
+3: 世界/n/1
+4: 学生/n/1
+5: 词/n/1

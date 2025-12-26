@@ -48,6 +48,18 @@
 
 ---
 
+## 输入指令说明（交互模式）
+- 时间事件: `[HH:MM:SS] sentence`
+	- 示例: `[12:34:56] 人工智能正在改变世界`
+- 即时事件（无时间戳）: `sentence`
+	- 示例: `机器学习与深度学习`
+- 查询 Top-K: `[ACTION] QUERY K=15`
+	- 解释: 查询第 15 分钟窗口的热点词；若为当前分钟，直接基于 `word_count_map`，否则从 `history_map` 重构区间统计。
+- 调整窗口: `[ACTION] WINDOW_SIZE=10`
+	- 解释: 将滑动窗口大小调整为 10 分钟，后续过期淘汰与查询均按新窗口执行。
+
+---
+
 ## **目录结构**
 - 源码与脚本
 	- [scripts/main.cpp](scripts/main.cpp): 主程序（文件/交互两模式、窗口与查询逻辑）。
@@ -96,6 +108,7 @@ cmake --build . #如果你用windows系统
 ---
 
 ## 运行与使用
+
 #### 前期设置
 - **输入部分**
     - sensitive_words.txt: 输入需要屏蔽的敏感词。
@@ -105,17 +118,18 @@ cmake --build . #如果你用windows系统
 - **输出部分**
     - output.txt: 系统输出文档。
 - **配置文件**: [config.ini](config.ini)
-    1.input_file: 文件输入下的输入文件，务必确保该文件在...\input下。
-    2.output_file: 系统处理的输出文件名，务必确保该文件在...\output下。
-    3.dict_dir: jieba库自带的字典名。
-    4.mode: jieba分词模式，必须开启tagres模式以实现词性筛选。
-    5.topk: 热词统计范围。
-    6.time_range: 时间窗口大小。
-    7.work_type: 1:文件输入模式 2：终端输入模式
-    8.normalize: 是否对非标准utf-8输入的中文进行标准化
+    1. input_file: 文件输入下的输入文件，务必确保该文件在...\input下。
+    2. output_file: 系统处理的输出文件名，务必确保该文件在...\output下。
+    3. dict_dir: jieba库自带的字典名。
+    4. mode: jieba分词模式，必须开启tagres模式以实现词性筛选。
+    5. topk: 热词统计范围。
+    6. time_range: 时间窗口大小。
+    7. work_type: “1”表示选择文件输入模式， “2”表示选择终端输入模式
+    8. normalize: 是否对非标准utf-8输入的中文进行标准化
 
+#### 实际运行
 - **文件模式**（离线批处理）
-	1. 设置 [config.ini](config.ini) 中的 `input_file` 与 `output_file`。
+	1. 在`config.ini`中令work_type=1，设置 [config.ini](config.ini) 中的 `input_file` 与 `output_file`。
 	2. 运行：
 		```
 		 .\build\hotwords.exe
@@ -123,7 +137,7 @@ cmake --build . #如果你用windows系统
 	3. 在 [output/output.txt](output/output.txt) 末尾查看性能指标与查询结果快照。
 
 - **交互模式（实时输入）**
-	1. 将 `work_type = 2`。
+	1. 在`config.ini`中，将 `work_type = 2`。
 	2. 运行二进制后，按提示格式输入：
 		 - `[HH:MM:SS] 句子内容`：显式时间事件。
 		 - `句子内容`：隐式使用当前时间。
@@ -149,18 +163,24 @@ cmake --build . #如果你用windows系统
 		 - 上传输入文件（保存至 [input/](input)，自动更新 `input_file`）。
 		 - 交互式控制台：启动/输入/查看输出（强制 `work_type=2`）。
 		 - 解析输出中的查询快照列表 `/api/output_parsed`。 -->
+#### 单元测试
 
----
+在 `/tests` 中，我们准备了单元测试脚本，对以下功能进行了验证：
 
-## 输入指令说明（交互模式）
-- 时间事件: `[HH:MM:SS] sentence`
-	- 示例: `[12:34:56] 人工智能正在改变世界`
-- 即时事件（无时间戳）: `sentence`
-	- 示例: `机器学习与深度学习`
-- 查询 Top-K: `[ACTION] QUERY K=15`
-	- 解释: 查询第 15 分钟窗口的热点词；若为当前分钟，直接基于 `word_count_map`，否则从 `history_map` 重构区间统计。
-- 调整窗口: `[ACTION] WINDOW_SIZE=10`
-	- 解释: 将滑动窗口大小调整为 10 分钟，后续过期淘汰与查询均按新窗口执行。
+- 分词查询  
+- 词性过滤  
+- 敏感词过滤  
+- 专有名词查询  
+- 动态窗口大小调节  
+
+在编译项目之后，在终端输入：
+
+```bash
+cd build
+.\unit_test.exe
+```
+
+即可运行单元测试。测试结果保存在 output_unit_test.txt 中，所有测试均可通过。
 
 ---
 

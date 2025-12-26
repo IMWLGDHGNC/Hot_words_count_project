@@ -31,6 +31,12 @@ add_executable(hotwords
     ${CMAKE_SOURCE_DIR}/scripts/main.cpp
 )
 
+# Unit tests (call functions from scripts/main.cpp)
+add_executable(unit_test
+    ${CMAKE_SOURCE_DIR}/scripts/unit_test.cpp
+    ${CMAKE_SOURCE_DIR}/scripts/main.cpp
+)
+target_compile_definitions(unit_test PRIVATE UNIT_TEST)
 
 # Optional demo target
 if(BUILD_DEMO)

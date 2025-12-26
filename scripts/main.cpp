@@ -395,6 +395,7 @@ int deal_with_console_input(cppjieba::Jieba& jieba, const Config& cfg) {
     return EXIT_SUCCESS;
 }
 
+#ifndef UNIT_TEST
 int main() {
 
     #ifdef _WIN32
@@ -442,5 +443,5 @@ int main() {
         deal_with_console_input(jieba, cfg);
     }
     return 0;
-    
 }
+#endif

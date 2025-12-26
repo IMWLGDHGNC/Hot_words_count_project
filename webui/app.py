@@ -174,12 +174,16 @@ def api_output_parsed():
 console_proc = None
 console_buf = []
 console_lock = threading.Lock()
+MAX_CONSOLE_LINES = 5000  # cap in-memory buffer to avoid OOM on long runs
 
 def _console_reader(proc: subprocess.Popen):
     try:
         for line in proc.stdout:
             with console_lock:
                 console_buf.append(line.rstrip("\r\n"))
+                # Trim buffer to last N lines to keep memory bounded
+                if len(console_buf) > MAX_CONSOLE_LINES:
+                    del console_buf[:-MAX_CONSOLE_LINES]
     except Exception:
         pass
 
@@ -228,12 +232,12 @@ def api_console_input():
         if line is not None:
             lines_payload = [str(line)]
     try:
-        for ln in lines_payload:
-            if ln == "":
-                # send a bare newline to allow blank lines if user wants
-                console_proc.stdin.write("\n")
-            else:
-                console_proc.stdin.write(ln + "\n")
+        if not lines_payload:
+            console_proc.stdin.write("\n")
+        else:
+            # Write in one batch for efficiency; preserve blank lines
+            payload = "\n".join(lines_payload) + "\n"
+            console_proc.stdin.write(payload)
         console_proc.stdin.flush()
         return jsonify({"ok": True})
     except Exception as e:
